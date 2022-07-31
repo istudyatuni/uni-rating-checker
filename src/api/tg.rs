@@ -1,5 +1,5 @@
 use crate::model::itmo::Competition;
-use crate::model::tg::SendMessageResponse;
+use crate::model::tg::{ErrorResponse, SendMessageResponse};
 
 const PROGRAM_NAME: &str = "Разработка программного обеспечения";
 
@@ -17,21 +17,31 @@ pub async fn send_message(competition: &Competition) -> Result<(), Box<dyn std::
         competition.total_scores,
         competition.exam_scores.unwrap_or(0f64)
     );
+    let text = text.replace('-', "\\-");
+
     let params = [
         ("chat_id", CHAT_ID.to_string()),
-        ("text", text),
+        ("text", text.clone()),
         ("parse_mode", "MarkdownV2".to_string()),
     ];
 
     let url =
         reqwest::Url::parse_with_params(&format!("{TG_API_PREFIX}{TOKEN}/sendMessage"), &params)?;
-    let response: SendMessageResponse = reqwest::get(url).await?.json().await?;
+    let response = reqwest::get(url).await?;
+    if !response.status().is_success() {
+        let error: ErrorResponse = response.json().await?;
+        if let Some(description) = error.description {
+            eprintln!("Error when making send message request: {description}");
+        }
+        return Ok(());
+    }
 
-    if !response.ok {
+    let data: SendMessageResponse = response.json().await?;
+
+    if !data.ok {
         eprintln!(
             "Error when send message: {}",
-            response
-                .description
+            data.description
                 .unwrap_or_else(|| "error has no description".to_string())
         )
     }

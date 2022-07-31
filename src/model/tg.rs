@@ -11,6 +11,7 @@ pub struct Response<T> {
 
 pub type GetUpdatesResponse = Response<Vec<Update>>;
 pub type SendMessageResponse = Response<Message>;
+pub type ErrorResponse = Response<Option<()>>;
 
 #[derive(Debug, Deserialize)]
 pub struct Update {
