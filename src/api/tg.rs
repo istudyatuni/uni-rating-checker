@@ -5,13 +5,14 @@ const PROGRAM_NAME: &str = "Разработка программного обе
 
 const TG_API_PREFIX: &str = "https://api.telegram.org/bot";
 const TOKEN: &str = env!("TG_TOKEN");
-// me
-const CHAT_ID: i32 = 687545186;
+// me, now hardcoded
+pub const CHAT_ID: &str = "687545186";
 
-pub async fn send_message(competition: Competition) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_message(competition: &Competition) -> Result<(), Box<dyn std::error::Error>> {
     let text = format!(
-        "*{}*\nПозиция {}\nВсего баллов {}\nБалл ВИ {}",
+        "*{}*\n_{}_\nПозиция {}\nВсего баллов {}\nБалл ВИ {}",
         PROGRAM_NAME,
+        competition.case_number,
         competition.position,
         competition.total_scores,
         competition.exam_scores.unwrap_or(0f64)
@@ -28,7 +29,7 @@ pub async fn send_message(competition: Competition) -> Result<(), Box<dyn std::e
 
     if !response.ok {
         eprintln!(
-            "Error: {}",
+            "Error when send message: {}",
             response
                 .description
                 .unwrap_or_else(|| "error has no description".to_string())

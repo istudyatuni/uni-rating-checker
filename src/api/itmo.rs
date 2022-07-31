@@ -1,7 +1,7 @@
 use crate::model::itmo::{Competition, RatingResponse};
 
 const ITMO_API_PREFIX: &str = "https://abitlk.itmo.ru/api/v1/9e2eee80b266b31c8d65f1dd3992fa26eb8b4c118ca9633550889a8ff2cac429";
-const SNILS: &str = env!("SNILS");
+const CASE_NUMBER: &str = env!("CASE_NUMBER");
 
 const PROGRAM_ID: &str = "15840";
 
@@ -30,12 +30,7 @@ fn find_score(response: RatingResponse) -> Option<Competition> {
         .result
         .general_competition
         .iter()
-        .filter(|c| {
-            if let Some(s) = &c.snils {
-                return s == SNILS;
-            }
-            false
-        })
+        .filter(|c| c.case_number == CASE_NUMBER)
         .collect::<Vec<&Competition>>();
     if filtered_competition.len() == 1 {
         return Some(filtered_competition[0].clone());
