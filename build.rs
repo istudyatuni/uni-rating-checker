@@ -2,6 +2,7 @@ const ENV_FILE: &str = include_str!(".env");
 
 fn main() {
     for line in ENV_FILE.split_whitespace() {
+        let line = line.trim();
         if line.starts_with('#') {
             continue;
         }
