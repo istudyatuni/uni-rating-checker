@@ -10,9 +10,23 @@ mod model;
 
 const TEN_MIN_IN_SEC: i32 = 10 * 60;
 
+fn init_db() -> Result<DB, Box<dyn std::error::Error>> {
+    #[cfg(feature = "prod")]
+    let db_path: String = if let Some(home_dir) = dirs::home_dir() {
+        format!("{}/itmo.db", home_dir.display().to_string())
+    } else {
+        eprintln!("no $HOME for storing database file, using /");
+        "/itmo.db".to_string()
+    };
+    #[cfg(not(feature = "prod"))]
+    let db_path = "test.db".to_string();
+
+    Ok(DB::new(&db_path)?)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let db = DB::new("test.db")?;
+    let db = init_db()?;
 
     load_programs(&db).await.unwrap();
 
