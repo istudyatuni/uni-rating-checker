@@ -106,11 +106,6 @@ impl DB {
         )?;
         Ok(())
     }
-    pub fn insert_program(&self, uni: &str, program_id: &str, program_name: &str) -> Result<()> {
-        self.conn
-            .execute(INSERT_PROGRAM_SQL, (program_id, uni, program_name))?;
-        Ok(())
-    }
     pub fn select_program(&self, uni: &str, program_id: &str) -> Result<Option<Program>> {
         let mut statement = self.conn.prepare(SELECT_PROGRAM_SQL)?;
 
@@ -122,5 +117,10 @@ impl DB {
         })?;
 
         Ok(Some(program))
+    }
+    pub fn insert_program(&self, uni: &str, program_id: &str, program_name: &str) -> Result<()> {
+        self.conn
+            .execute(INSERT_PROGRAM_SQL, (program_id, uni, program_name))?;
+        Ok(())
     }
 }
