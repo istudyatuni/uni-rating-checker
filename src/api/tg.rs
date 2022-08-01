@@ -3,7 +3,6 @@ use crate::model::itmo::Competition;
 use crate::model::tg::{ErrorResponse, GetUpdatesResponse, MessageRequest, SendMessageResponse};
 
 use super::common::handle_competition;
-use super::itmo::get_rating;
 
 const TG_API_PREFIX: &str = "https://api.telegram.org/bot";
 const TOKEN: &str = env!("TG_TOKEN");
@@ -100,10 +99,8 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
             if let Some(text) = message.text {
                 match MessageRequest::from(text) {
                     MessageRequest::Watch(args) => {
-                        let competition = get_rating(&args.program_id, &args.case_number).await?;
                         handle_competition(
                             db,
-                            competition,
                             &message.from.id.to_string(),
                             &args.case_number,
                             &args.program_id,

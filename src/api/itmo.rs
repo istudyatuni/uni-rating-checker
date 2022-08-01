@@ -5,7 +5,8 @@ use crate::model::itmo::{
 const API_PREFIX: &str = "https://abitlk.itmo.ru/api/v1";
 const API_KEY: &str = "9e2eee80b266b31c8d65f1dd3992fa26eb8b4c118ca9633550889a8ff2cac429";
 
-pub async fn get_rating(
+/// Get competition in rating from itmo.ru
+pub async fn get_rating_competition(
     program_id: &str,
     case_number: &str,
 ) -> Result<Option<Competition>, Box<dyn std::error::Error>> {
