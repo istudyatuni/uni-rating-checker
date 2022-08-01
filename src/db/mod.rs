@@ -4,21 +4,9 @@ use rusqlite::{Connection, Result};
 
 use crate::model::itmo::Competition;
 
-const INIT_DB_SQL: &str = r#"CREATE TABLE IF NOT EXISTS results (
-	tg_chat_id TEXT NOT NULL,
-	case_number TEXT NOT NULL,
-	position INTEGER,
-	priority INTEGER,
-	total_scores INTEGER,
-	exam_scores INTEGER
-)"#;
-const SELECT_COMPETITION_SQL: &str =
-    "SELECT case_number, position, priority, total_scores, exam_scores
-FROM results
-WHERE tg_chat_id = :tg_chat_id";
-const INSERT_COMPETITION_SQL: &str = r#"INSERT INTO results
-	(tg_chat_id, case_number, position, priority, total_scores, exam_scores)
-VALUES (?1, ?2, ?3, ?4, ?5, ?6)"#;
+const INIT_DB_SQL: &str = include_str!("./sql/init.sql");
+const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select_competition.sql");
+const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert_competition.sql");
 
 #[derive(Debug)]
 pub struct DB {
