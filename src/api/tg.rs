@@ -6,7 +6,10 @@ const PROGRAM_NAME: &str = "Разработка программного обе
 const TG_API_PREFIX: &str = "https://api.telegram.org/bot";
 const TOKEN: &str = env!("TG_TOKEN");
 
-pub async fn send_message(competition: &Competition, chat_id: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_message(
+    competition: &Competition,
+    chat_id: String,
+) -> Result<(), Box<dyn std::error::Error>> {
     let text = format!(
         "*{}*\n_{}_\nПозиция {}\nВсего баллов {}\nБалл ВИ {}",
         PROGRAM_NAME,
@@ -29,7 +32,7 @@ pub async fn send_message(competition: &Competition, chat_id: String) -> Result<
     if !response.status().is_success() {
         let error: ErrorResponse = response.json().await?;
         if let Some(description) = error.description {
-            eprintln!("Error when making send message request: {description}");
+            eprintln!("Cannot send message request: {description}");
         }
         return Ok(());
     }
@@ -38,7 +41,7 @@ pub async fn send_message(competition: &Competition, chat_id: String) -> Result<
 
     if !data.ok {
         eprintln!(
-            "Error when send message: {}",
+            "Cannot send message: {}",
             data.description
                 .unwrap_or_else(|| "error has no description".to_string())
         )

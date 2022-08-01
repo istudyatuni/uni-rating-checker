@@ -1,12 +1,17 @@
-#![allow(unused)]
-
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct RatingResponse {
+pub struct Response<T> {
     pub ok: bool,
-    pub result: RatingResult,
+    pub message: String,
+    pub result: T,
 }
+
+pub type RatingResponse = Response<RatingResult>;
+pub type ProgramsResponse = Response<ProgramsResult>;
+pub type ErrorResponse = Response<Option<()>>;
+
+// Rating
 
 #[derive(Debug, Deserialize)]
 pub struct RatingResult {
@@ -32,3 +37,21 @@ impl std::cmp::PartialEq for Competition {
 }
 
 impl std::cmp::Eq for Competition {}
+
+// Programs
+
+#[derive(Debug, Deserialize)]
+pub struct ProgramsResult {
+    pub groups: Vec<ProgramsGroup>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ProgramsGroup {
+    pub name: String,
+    pub programs: Vec<Program>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Program {
+    pub isu_id: i32,
+}

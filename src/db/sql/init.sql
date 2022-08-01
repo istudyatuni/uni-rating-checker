@@ -6,4 +6,10 @@ CREATE TABLE IF NOT EXISTS results (
 	total_scores INTEGER,
 	exam_scores INTEGER,
 	PRIMARY KEY (tg_chat_id, case_number)
+);
+CREATE TABLE IF NOT EXISTS programs (
+	id TEXT NOT NULL,
+	uni TEXT NOT NULL,
+	name TEXT NOT NULL,
+	PRIMARY KEY (id, uni)
 )

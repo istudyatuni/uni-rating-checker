@@ -1,4 +1,4 @@
-use api::itmo::get_rating;
+use api::itmo::{get_programs, get_rating};
 use api::tg::send_message;
 use db::sqlite::DB;
 
@@ -9,11 +9,18 @@ mod model;
 const PROGRAM_ID: &str = "15840";
 const CASE_NUMBER: &str = env!("CASE_NUMBER");
 // me, now hardcoded
-pub const CHAT_ID: &str = "687545186";
+const CHAT_ID: &str = "687545186";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = DB::new("test.db")?;
+
+    let groups = get_programs().await?;
+    for group in &groups {
+        for program in &group.programs {
+            db.insert_program("itmo", program.isu_id, &group.name)?;
+        }
+    }
 
     let competition = get_rating(PROGRAM_ID.to_string(), CASE_NUMBER.to_string()).await?;
 

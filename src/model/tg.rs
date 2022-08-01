@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -9,6 +7,7 @@ pub struct Response<T> {
     pub result: T,
 }
 
+#[allow(unused)]
 pub type GetUpdatesResponse = Response<Vec<Update>>;
 pub type SendMessageResponse = Response<Message>;
 pub type ErrorResponse = Response<Option<()>>;
