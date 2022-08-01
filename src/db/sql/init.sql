@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS results (
 	program_id TEXT NOT NULL,
 	position INTEGER,
 	priority INTEGER,
-	total_scores INTEGER,
-	exam_scores INTEGER,
+	total_scores NUMERIC,
+	exam_scores NUMERIC,
 	PRIMARY KEY (tg_chat_id, case_number, program_id)
 );
 CREATE TABLE IF NOT EXISTS programs (

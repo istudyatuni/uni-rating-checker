@@ -1,10 +1,12 @@
 use rusqlite::{Connection, Result};
 
+use crate::model::db::DbResultItem;
 use crate::model::itmo::{Competition, Program};
 
 const INIT_DB_SQL: &str = include_str!("./sql/init.sql");
 
 const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select_competition.sql");
+const SELECT_ALL_COMPETITIONS_SQL: &str = include_str!("./sql/select_all_competitions.sql");
 const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert_competition.sql");
 const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update_competition.sql");
 
@@ -54,7 +56,32 @@ impl DB {
         match result {
             Ok(competition) => Ok(Some(competition)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(rusqlite::Error::from(e)),
+            Err(e) => Err(e),
+        }
+    }
+    pub fn select_all_competitions(&self) -> Result<Vec<DbResultItem>> {
+        let mut statement = self.conn.prepare(SELECT_ALL_COMPETITIONS_SQL)?;
+        let result = statement.query_map((), |row| {
+            Ok(DbResultItem {
+                tg_chat_id: row.get(0)?,
+                program_id: row.get(2)?,
+                competition: Competition {
+                    position: row.get(3)?,
+                    priority: row.get(4)?,
+                    total_scores: row.get(5)?,
+                    case_number: row.get(1)?,
+                    exam_scores: row.get(6)?,
+                },
+            })
+        });
+
+        match result {
+            Ok(items) => Ok(items
+                .into_iter()
+                .filter_map(|c| if let Ok(c) = c { Some(c) } else { None })
+                .collect()),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(vec![]),
+            Err(e) => Err(e),
         }
     }
     pub fn insert_competition(
@@ -114,7 +141,7 @@ impl DB {
         match result {
             Ok(program) => Ok(Some(program)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(rusqlite::Error::from(e)),
+            Err(e) => Err(e),
         }
     }
     pub fn insert_program(&self, uni: &str, program_id: &str, program_name: &str) -> Result<()> {

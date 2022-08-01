@@ -1,12 +1,14 @@
 use tokio::time;
 
 use api::itmo::load_programs;
-use api::tg::handle_updates;
+use api::{common::handle_competition, tg::handle_updates};
 use db::sqlite::DB;
 
 mod api;
 mod db;
 mod model;
+
+const TEN_MIN_IN_SEC: i32 = 10 * 60;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,8 +17,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     load_programs(&db).await.unwrap();
 
     let mut offset = 0;
+    let mut sec_counter = 0;
     loop {
         offset = handle_updates(&db, offset).await.unwrap();
+
+        if sec_counter == 0 {
+            // select registered watchers from 'results'
+            let competitions = db.select_all_competitions()?;
+
+            for c in competitions {
+                if let Some(case_number) = c.competition.case_number {
+                    handle_competition(&db, &c.tg_chat_id, &case_number, &c.program_id).await?;
+                }
+            }
+        }
+        sec_counter = (sec_counter + 1) % TEN_MIN_IN_SEC;
+
         time::sleep(time::Duration::from_secs(1)).await;
     }
 }
