@@ -6,8 +6,8 @@ const API_PREFIX: &str = "https://abitlk.itmo.ru/api/v1";
 const API_KEY: &str = "9e2eee80b266b31c8d65f1dd3992fa26eb8b4c118ca9633550889a8ff2cac429";
 
 pub async fn get_rating(
-    program_id: String,
-    case_number: String,
+    program_id: &str,
+    case_number: &str,
 ) -> Result<Option<Competition>, Box<dyn std::error::Error>> {
     let rating_response: RatingResponse = reqwest::get(format!(
         "{API_PREFIX}/{API_KEY}/rating/master/budget?program_id={program_id}"
@@ -24,7 +24,7 @@ pub async fn get_rating(
     Ok(None)
 }
 
-fn find_score(response: RatingResponse, case_number: String) -> Option<Competition> {
+fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition> {
     if !response.ok {
         return None;
     }
@@ -33,7 +33,13 @@ fn find_score(response: RatingResponse, case_number: String) -> Option<Competiti
         .result
         .general_competition
         .iter()
-        .filter(|c| c.case_number == case_number)
+        .filter(|c| {
+            if let Some(c) = &c.case_number {
+                c == case_number
+            } else {
+                false
+            }
+        })
         .collect::<Vec<&Competition>>();
     if filtered_competition.len() == 1 {
         return Some(filtered_competition[0].clone());

@@ -1,11 +1,14 @@
 use rusqlite::{Connection, Result};
 
-use crate::model::itmo::Competition;
+use crate::model::itmo::{Competition, Program};
 
 const INIT_DB_SQL: &str = include_str!("./sql/init.sql");
+
 const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select_competition.sql");
 const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert_competition.sql");
 const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update_competition.sql");
+
+const SELECT_PROGRAM_SQL: &str = include_str!("./sql/select_program.sql");
 const INSERT_PROGRAM_SQL: &str = include_str!("./sql/insert_program.sql");
 
 #[derive(Debug)]
@@ -29,14 +32,19 @@ impl DB {
         &self,
         tg_chat_id: &str,
         case_number: &str,
+        program_id: &str,
     ) -> Result<Option<Competition>> {
         let mut statement = self.conn.prepare(SELECT_COMPETITION_SQL)?;
         let rows: Vec<_> = statement
             .query_map(
-                &[(":tg_chat_id", &tg_chat_id), (":case_number", &case_number)],
+                &[
+                    (":tg_chat_id", &tg_chat_id),
+                    (":case_number", &case_number),
+                    (":program_id", &program_id),
+                ],
                 |row| {
                     Ok(Competition {
-                        case_number: case_number.to_string(),
+                        case_number: Some(case_number.to_string()),
                         position: row.get(0)?,
                         priority: row.get(1)?,
                         total_scores: row.get(2)?,
@@ -49,17 +57,27 @@ impl DB {
             .collect();
 
         if rows.is_empty() {
-            return Ok(None);
+            Ok(None)
+        } else {
+            Ok(Some(rows[0].clone()))
         }
-
-        Ok(Some(rows[0].clone()))
     }
-    pub fn insert_competition(&self, competition: &Competition, tg_chat_id: &str) -> Result<()> {
+    pub fn insert_competition(
+        &self,
+        competition: &Competition,
+        tg_chat_id: &str,
+        program_id: &str,
+    ) -> Result<()> {
+        if competition.case_number.is_none() {
+            eprintln!("trying insert, but case_number is none");
+            return Ok(());
+        }
         self.conn.execute(
             INSERT_COMPETITION_SQL,
             (
                 tg_chat_id,
                 &competition.case_number,
+                program_id,
                 competition.position,
                 competition.priority,
                 competition.total_scores,
@@ -68,12 +86,18 @@ impl DB {
         )?;
         Ok(())
     }
-    pub fn update_competition(&self, competition: &Competition, tg_chat_id: &str) -> Result<()> {
+    pub fn update_competition(
+        &self,
+        competition: &Competition,
+        tg_chat_id: &str,
+        program_id: &str,
+    ) -> Result<()> {
         self.conn.execute(
             UPDATE_COMPETITION_SQL,
             (
                 tg_chat_id,
                 &competition.case_number,
+                program_id,
                 competition.position,
                 competition.priority,
                 competition.total_scores,
@@ -82,9 +106,21 @@ impl DB {
         )?;
         Ok(())
     }
-    pub fn insert_program(&self, uni: &str, program_id: i32, program_name: &str) -> Result<()> {
+    pub fn insert_program(&self, uni: &str, program_id: &str, program_name: &str) -> Result<()> {
         self.conn
             .execute(INSERT_PROGRAM_SQL, (program_id, uni, program_name))?;
         Ok(())
+    }
+    pub fn select_program(&self, uni: &str, program_id: &str) -> Result<Option<Program>> {
+        let mut statement = self.conn.prepare(SELECT_PROGRAM_SQL)?;
+
+        let program = statement.query_row(&[(":id", program_id), (":uni", uni)], |row| {
+            Ok(Program {
+                isu_id: row.get(0)?,
+                title_ru: row.get(1)?,
+            })
+        })?;
+
+        Ok(Some(program))
     }
 }

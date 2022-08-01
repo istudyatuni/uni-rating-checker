@@ -23,7 +23,7 @@ pub struct Competition {
     pub position: i32,
     pub priority: i32,
     pub total_scores: f64,
-    pub case_number: String,
+    pub case_number: Option<String>,
     pub exam_scores: Option<f64>,
 }
 
@@ -51,7 +51,8 @@ pub struct ProgramsGroup {
     pub programs: Vec<Program>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Program {
+    pub title_ru: String,
     pub isu_id: i32,
 }
