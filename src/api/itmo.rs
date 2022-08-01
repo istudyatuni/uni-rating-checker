@@ -1,3 +1,4 @@
+use crate::db::sqlite::DB;
 use crate::model::itmo::{
     Competition, ErrorResponse, ProgramsGroup, ProgramsResponse, RatingResponse,
 };
@@ -49,7 +50,7 @@ fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition
     None
 }
 
-pub async fn get_programs() -> Result<Vec<ProgramsGroup>, Box<dyn std::error::Error>> {
+async fn get_programs() -> Result<Vec<ProgramsGroup>, Box<dyn std::error::Error>> {
     let params = [
         ("degree", "master".to_string()),
         // enough for now
@@ -67,4 +68,14 @@ pub async fn get_programs() -> Result<Vec<ProgramsGroup>, Box<dyn std::error::Er
     let data: ProgramsResponse = response.json().await?;
 
     Ok(data.result.groups)
+}
+
+pub async fn load_programs(db: &DB) -> Result<(), Box<dyn std::error::Error>> {
+    let groups = get_programs().await?;
+    for group in &groups {
+        for program in &group.programs {
+            db.insert_program("itmo", &program.isu_id.to_string(), &program.title_ru)?;
+        }
+    }
+    Ok(())
 }

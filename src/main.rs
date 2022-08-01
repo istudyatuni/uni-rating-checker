@@ -1,22 +1,12 @@
 use tokio::time;
 
-use api::itmo::get_programs;
+use api::itmo::load_programs;
 use api::tg::handle_updates;
 use db::sqlite::DB;
 
 mod api;
 mod db;
 mod model;
-
-async fn load_programs(db: &DB) -> Result<(), Box<dyn std::error::Error>> {
-    let groups = get_programs().await?;
-    for group in &groups {
-        for program in &group.programs {
-            db.insert_program("itmo", &program.isu_id.to_string(), &program.title_ru)?;
-        }
-    }
-    Ok(())
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
