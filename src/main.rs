@@ -1,6 +1,6 @@
 use api::itmo::get_rating;
 use api::tg::{send_message, CHAT_ID};
-use db::DB;
+use db::sqlite::DB;
 
 mod api;
 mod db;
