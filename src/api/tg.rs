@@ -5,10 +5,8 @@ const PROGRAM_NAME: &str = "Разработка программного обе
 
 const TG_API_PREFIX: &str = "https://api.telegram.org/bot";
 const TOKEN: &str = env!("TG_TOKEN");
-// me, now hardcoded
-pub const CHAT_ID: &str = "687545186";
 
-pub async fn send_message(competition: &Competition) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_message(competition: &Competition, chat_id: String) -> Result<(), Box<dyn std::error::Error>> {
     let text = format!(
         "*{}*\n_{}_\nПозиция {}\nВсего баллов {}\nБалл ВИ {}",
         PROGRAM_NAME,
@@ -20,7 +18,7 @@ pub async fn send_message(competition: &Competition) -> Result<(), Box<dyn std::
     let text = text.replace('-', "\\-");
 
     let params = [
-        ("chat_id", CHAT_ID.to_string()),
+        ("chat_id", chat_id),
         ("text", text.clone()),
         ("parse_mode", "MarkdownV2".to_string()),
     ];
