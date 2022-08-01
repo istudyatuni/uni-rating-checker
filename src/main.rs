@@ -1,5 +1,5 @@
 use api::itmo::{get_programs, get_rating};
-use api::tg::send_message;
+use api::tg::send_competition;
 use db::sqlite::DB;
 
 mod api;
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if competition != old_competition && competition.is_some() {
                 if let Some(competition) = competition {
                     // send message if new competition differs from old (or new, when old == None)
-                    send_message(&competition, CHAT_ID.to_string()).await?;
+                    send_competition(&competition, CHAT_ID.to_string()).await?;
 
                     // insert if competition is new, update if is old
                     if old_competition.is_none() {
