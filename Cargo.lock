@@ -307,17 +307,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "879d54834c8c76457ef4293a689b2a8c59b076067ad77b15efafbb05f92a592b"
 
 [[package]]
-name = "itmo-result-checker"
-version = "0.1.0"
-dependencies = [
- "dirs",
- "reqwest",
- "rusqlite",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -833,6 +822,17 @@ name = "try-lock"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
+
+[[package]]
+name = "uni-rating-checker"
+version = "0.1.0"
+dependencies = [
+ "dirs",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "tokio",
+]
 
 [[package]]
 name = "unicode-bidi"
