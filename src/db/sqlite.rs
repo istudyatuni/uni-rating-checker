@@ -35,31 +35,26 @@ impl DB {
         program_id: &str,
     ) -> Result<Option<Competition>> {
         let mut statement = self.conn.prepare(SELECT_COMPETITION_SQL)?;
-        let rows: Vec<_> = statement
-            .query_map(
-                &[
-                    (":tg_chat_id", &tg_chat_id),
-                    (":case_number", &case_number),
-                    (":program_id", &program_id),
-                ],
-                |row| {
-                    Ok(Competition {
-                        case_number: Some(case_number.to_string()),
-                        position: row.get(0)?,
-                        priority: row.get(1)?,
-                        total_scores: row.get(2)?,
-                        exam_scores: row.get(3)?,
-                    })
-                },
-            )?
-            .into_iter()
-            .filter_map(|c| if let Ok(c) = c { Some(c) } else { None })
-            .collect();
-
-        if rows.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(rows[0].clone()))
+        let result = statement.query_row(
+            &[
+                (":tg_chat_id", &tg_chat_id),
+                (":case_number", &case_number),
+                (":program_id", &program_id),
+            ],
+            |row| {
+                Ok(Competition {
+                    case_number: Some(case_number.to_string()),
+                    position: row.get(0)?,
+                    priority: row.get(1)?,
+                    total_scores: row.get(2)?,
+                    exam_scores: row.get(3)?,
+                })
+            },
+        );
+        match result {
+            Ok(competition) => Ok(Some(competition)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(rusqlite::Error::from(e)),
         }
     }
     pub fn insert_competition(
@@ -109,14 +104,18 @@ impl DB {
     pub fn select_program(&self, uni: &str, program_id: &str) -> Result<Option<Program>> {
         let mut statement = self.conn.prepare(SELECT_PROGRAM_SQL)?;
 
-        let program = statement.query_row(&[(":id", program_id), (":uni", uni)], |row| {
+        let result = statement.query_row(&[(":id", program_id), (":uni", uni)], |row| {
             Ok(Program {
                 isu_id: row.get(0)?,
                 title_ru: row.get(1)?,
             })
-        })?;
+        });
 
-        Ok(Some(program))
+        match result {
+            Ok(program) => Ok(Some(program)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(rusqlite::Error::from(e)),
+        }
     }
     pub fn insert_program(&self, uni: &str, program_id: &str, program_name: &str) -> Result<()> {
         self.conn
