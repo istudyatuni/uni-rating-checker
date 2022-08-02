@@ -12,29 +12,36 @@ pub async fn handle_competition(
     degree: &str,
     case_number: &str,
     program_id: &str,
+    is_user_request: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let competition = get_rating_competition(degree, program_id, case_number).await?;
 
     match db.select_competition(chat_id, case_number, degree, program_id) {
         Ok(old_competition) => {
-            if competition != old_competition && competition.is_some() {
-                if let Some(competition) = competition {
-                    let program = db.select_program("itmo", program_id)?;
-                    let program_name = if let Some(program) = program {
-                        program.title_ru
-                    } else {
-                        "Названия нет".to_string()
-                    };
+            if let Some(competition) = competition {
+                let program = db.select_program("itmo", program_id)?;
+                let program_name = if let Some(program) = program {
+                    program.title_ru
+                } else {
+                    "Названия нет".to_string()
+                };
 
-                    // send message if new competition differs from old (or new, when old == None)
-                    send_competition_message(&competition, chat_id, &program_name).await?;
+                let mut should_send_message = false;
 
-                    // insert if competition is new, update if is old
-                    if old_competition.is_none() {
-                        db.insert_competition(&competition, chat_id, program_id, degree)?;
-                    } else {
+                // update if competition is old (competition != old_competition)
+                // insert if is new (when old == None, on first user request)
+                if let Some(old_competition) = old_competition {
+                    if competition != old_competition {
                         db.update_competition(&competition, chat_id, program_id, degree)?;
+                        should_send_message = true;
                     }
+                } else {
+                    db.insert_competition(&competition, chat_id, program_id, degree)?;
+                }
+
+                // send if it's user request or record in db was updated
+                if is_user_request || should_send_message {
+                    send_competition_message(&competition, chat_id, &program_name).await?;
                 }
             }
         }

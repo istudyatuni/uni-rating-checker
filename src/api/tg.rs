@@ -123,6 +123,7 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
                                 &args.degree.to_string(),
                                 &args.case_number,
                                 &args.program_id,
+                                true,
                             )
                             .await
                             {
