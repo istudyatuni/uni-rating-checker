@@ -7,7 +7,7 @@ use super::messages;
 
 const TG_API_PREFIX: &str = "https://api.telegram.org/bot";
 const TOKEN: &str = env!("TG_TOKEN");
-const LOGS_CHAT_ID: &str = "-737946600";
+const LOGS_CHAT_ID: &str = "-1001625263132";
 
 pub async fn send_competition_message(
     competition: &Competition,
