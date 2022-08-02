@@ -30,23 +30,18 @@ fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition
         return None;
     }
 
-    let filtered_competition = response
+    response
         .result
         .general_competition
         .iter()
-        .filter(|c| {
+        .find(|c| -> bool {
             if let Some(c) = &c.case_number {
                 c == case_number
             } else {
                 false
             }
         })
-        .collect::<Vec<&Competition>>();
-    if filtered_competition.len() == 1 {
-        return Some(filtered_competition[0].clone());
-    }
-
-    None
+        .cloned()
 }
 
 async fn get_programs() -> Result<Vec<ProgramsGroup>, Box<dyn std::error::Error>> {

@@ -137,9 +137,7 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
                             send_incorrect_command_message(&command, &chat_id).await?
                         }
                         MessageRequest::Help => send_message(messages::help, &chat_id).await?,
-                        MessageRequest::Start => {
-                            send_message(messages::start, &chat_id).await?
-                        }
+                        MessageRequest::Start => send_message(messages::start, &chat_id).await?,
                         MessageRequest::About => send_message(messages::about, &chat_id).await?,
                     },
                     None => send_message(messages::unknown_message, &chat_id).await?,
