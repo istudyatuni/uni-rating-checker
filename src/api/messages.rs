@@ -2,7 +2,7 @@
 
 use const_format::formatcp;
 
-pub const about: &str = "Это бот для отслеживания рейтинга поступления в вуз. В данный момент поддерживается только магистратура ИТМО";
+pub const about: &str = "Это бот для отслеживания рейтинга поступления в вуз. В данный момент поддерживается только магистратура ИТМО. Рейтинг проверяется каждые 10 минут";
 pub const help: &str = r#"Доступные команды:
 /watch - начать отслеживать рейтинг
 /help - показать справку"#;
@@ -11,6 +11,7 @@ pub const start_message: &str = formatcp!("Привет\\! {about}\n{help}");
 pub const unknown_message: &str = "Даже не знаю что сказать. Попробуй /help";
 pub const incorrect_command_header: &str = "Ожидаемая команда:";
 pub const error_occurred: &str = "Произошла ошибка. О ней уже сообщено";
+pub const rating_not_found: &str = "По этим данным ничего не найдено";
 
 // commands description
 

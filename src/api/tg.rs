@@ -117,14 +117,19 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
                 match MessageRequest::from(text) {
                     Some(request) => match request {
                         MessageRequest::Watch(args) => {
-                            handle_competition(
+                            match handle_competition(
                                 db,
                                 &chat_id,
                                 &args.degree.to_string(),
                                 &args.case_number,
                                 &args.program_id,
                             )
-                            .await?;
+                            .await {
+                                Ok(_) => (),
+                                Err(_) => {
+                                    send_message(messages::rating_not_found, &chat_id).await?;
+                                },
+                            }
                         }
                         MessageRequest::IncorrectCommand(command) => {
                             send_incorrect_command_message(&command, &chat_id).await?

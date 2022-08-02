@@ -20,11 +20,9 @@ pub async fn get_rating_competition(
     .await?;
 
     match find_score(rating_response, case_number) {
-        None => eprintln!("no matching competition"),
-        competition => return Ok(competition),
+        None => Err(Box::from("no matching competition")),
+        competition => Ok(competition),
     }
-
-    Ok(None)
 }
 
 fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition> {
