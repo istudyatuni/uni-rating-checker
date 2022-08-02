@@ -8,11 +8,12 @@ const API_KEY: &str = "9e2eee80b266b31c8d65f1dd3992fa26eb8b4c118ca9633550889a8ff
 
 /// Get competition in rating from itmo.ru
 pub async fn get_rating_competition(
+    degree: &str,
     program_id: &str,
     case_number: &str,
 ) -> Result<Option<Competition>, Box<dyn std::error::Error>> {
     let rating_response: RatingResponse = reqwest::get(format!(
-        "{API_PREFIX}/{API_KEY}/rating/master/budget?program_id={program_id}"
+        "{API_PREFIX}/{API_KEY}/rating/{degree}/budget?program_id={program_id}"
     ))
     .await?
     .json()

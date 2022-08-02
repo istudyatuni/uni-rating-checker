@@ -34,6 +34,7 @@ impl DB {
         &self,
         tg_chat_id: &str,
         case_number: &str,
+        degree: &str,
         program_id: &str,
     ) -> Result<Option<Competition>> {
         let mut statement = self.conn.prepare(SELECT_COMPETITION_SQL)?;
@@ -42,6 +43,7 @@ impl DB {
                 (":tg_chat_id", &tg_chat_id),
                 (":case_number", &case_number),
                 (":program_id", &program_id),
+                (":degree", &degree)
             ],
             |row| {
                 Ok(Competition {
@@ -64,13 +66,14 @@ impl DB {
         let result = statement.query_map((), |row| {
             Ok(DbResultItem {
                 tg_chat_id: row.get(0)?,
-                program_id: row.get(2)?,
+                degree: row.get(2)?,
+                program_id: row.get(3)?,
                 competition: Competition {
-                    position: row.get(3)?,
-                    priority: row.get(4)?,
-                    total_scores: row.get(5)?,
                     case_number: row.get(1)?,
-                    exam_scores: row.get(6)?,
+                    position: row.get(4)?,
+                    priority: row.get(5)?,
+                    total_scores: row.get(6)?,
+                    exam_scores: row.get(7)?,
                 },
             })
         });
@@ -89,6 +92,7 @@ impl DB {
         competition: &Competition,
         tg_chat_id: &str,
         program_id: &str,
+        degree: &str,
     ) -> Result<()> {
         if competition.case_number.is_none() {
             eprintln!("trying insert, but case_number is none");
@@ -99,6 +103,7 @@ impl DB {
             (
                 tg_chat_id,
                 &competition.case_number,
+                degree,
                 program_id,
                 competition.position,
                 competition.priority,
@@ -113,6 +118,7 @@ impl DB {
         competition: &Competition,
         tg_chat_id: &str,
         program_id: &str,
+        degree: &str,
     ) -> Result<()> {
         self.conn.execute(
             UPDATE_COMPETITION_SQL,
@@ -120,6 +126,7 @@ impl DB {
                 tg_chat_id,
                 &competition.case_number,
                 program_id,
+                degree,
                 competition.position,
                 competition.priority,
                 competition.total_scores,

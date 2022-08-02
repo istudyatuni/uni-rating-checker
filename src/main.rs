@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             for c in competitions {
                 if let Some(case_number) = c.competition.case_number {
-                    handle_competition(&db, &c.tg_chat_id, &case_number, &c.program_id).await?;
+                    handle_competition(&db, &c.tg_chat_id, &c.degree, &case_number, &c.program_id).await?;
                 }
             }
         }

@@ -9,12 +9,13 @@ use super::tg::send_competition_message;
 pub async fn handle_competition(
     db: &DB,
     chat_id: &str,
+    degree: &str,
     case_number: &str,
     program_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let competition = get_rating_competition(program_id, case_number).await?;
+    let competition = get_rating_competition(degree, program_id, case_number).await?;
 
-    match db.select_competition(chat_id, case_number, program_id) {
+    match db.select_competition(chat_id, case_number, degree, program_id) {
         Ok(old_competition) => {
             if competition != old_competition && competition.is_some() {
                 if let Some(competition) = competition {
@@ -30,9 +31,9 @@ pub async fn handle_competition(
 
                     // insert if competition is new, update if is old
                     if old_competition.is_none() {
-                        db.insert_competition(&competition, chat_id, program_id)?;
+                        db.insert_competition(&competition, chat_id, program_id, degree)?;
                     } else {
-                        db.update_competition(&competition, chat_id, program_id)?;
+                        db.update_competition(&competition, chat_id, program_id, degree)?;
                     }
                 }
             }

@@ -32,6 +32,21 @@ pub async fn send_competition_message(
     send_message(&text, chat_id).await
 }
 
+async fn send_incorrect_command_message(command: &str, chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let text = format!(
+        "Неверная команда, ожидается: {}",
+        match command {
+            "/watch" => "`/watch [uni] [degree] [program] [case number]`",
+            _ => "",
+        }
+    );
+    send_message(&text, chat_id).await
+}
+
+async fn send_no_message(chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    send_message("Даже не знаю что сказать. Попробуй /help", chat_id).await
+}
+
 pub async fn send_message(text: &str, chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
     let text = &text.replace('-', "\\-").replace('.', "\\.");
 
@@ -97,17 +112,24 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
 
         if let Some(message) = update.message {
             if let Some(text) = message.text {
+                let chat_id = message.from.id.to_string();
                 match MessageRequest::from(text) {
-                    MessageRequest::Watch(args) => {
-                        handle_competition(
-                            db,
-                            &message.from.id.to_string(),
-                            &args.case_number,
-                            &args.program_id,
-                        )
-                        .await?;
-                    }
-                    MessageRequest::None => (),
+                    Some(request) => match request {
+                        MessageRequest::Watch(args) => {
+                            handle_competition(
+                                db,
+                                &chat_id,
+                                &args.degree.to_string(),
+                                &args.case_number,
+                                &args.program_id,
+                            )
+                            .await?;
+                        }
+                        MessageRequest::IncorrectCommand(command) => {
+                            send_incorrect_command_message(&command, &chat_id).await?
+                        }
+                    },
+                    None => send_no_message(&chat_id).await?,
                 }
             }
         }

@@ -31,30 +31,71 @@ pub struct User {
 // Bot commands
 
 #[derive(Debug)]
+pub enum Degree {
+    Bachelor,
+    Master,
+    Postgraduate,
+}
+
+impl Degree {
+    pub fn from(name: &str) -> Option<Self> {
+        match name {
+            "bachelor" => Some(Self::Bachelor),
+            "master" => Some(Self::Master),
+            "postgraduate" => Some(Self::Postgraduate),
+            _ => None,
+        }
+    }
+}
+
+impl std::fmt::Display for Degree {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Degree::Bachelor => "bachelor",
+            Degree::Master => "master",
+            Degree::Postgraduate => "postgraduate",
+        };
+        write!(f, "{name}")
+    }
+}
+
+#[derive(Debug)]
 pub struct Watch {
     pub uni: String,
+    pub degree: Degree,
     pub program_id: String,
     pub case_number: String,
 }
 
 pub enum MessageRequest {
     Watch(Watch),
-    None,
+    IncorrectCommand(String),
 }
 
 impl MessageRequest {
-    pub fn from(text: String) -> Self {
+    pub fn from(text: String) -> Option<Self> {
         let text: Vec<String> = text.split(' ').map(|w| w.to_string()).collect();
-        if text.len() == 4 && text[0] == "/watch" {
-            Self::Watch(Watch {
-                // TODO: use if will add more universities. also validate it
-                // uni: text[1].clone(),
-                uni: "itmo".to_string(),
-                program_id: text[2].clone(),
-                case_number: text[3].clone(),
-            })
+        if text.is_empty() {
+            return None;
+        }
+
+        if text[0] == "/watch" {
+            if let Some(degree) = Degree::from(&text[2]) {
+                if text.len() == 5 {
+                    return Some(Self::Watch(Watch {
+                        // TODO: use if will add more universities. also validate it
+                        // uni: text[1].clone(),
+                        uni: "itmo".to_string(),
+                        degree,
+                        program_id: text[3].clone(),
+                        case_number: text[4].clone(),
+                    }));
+                }
+            }
+
+            Some(Self::IncorrectCommand(text[0].clone()))
         } else {
-            Self::None
+            None
         }
     }
 }
