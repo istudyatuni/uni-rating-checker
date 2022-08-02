@@ -5,13 +5,13 @@ use crate::model::itmo::{Competition, Program};
 
 const INIT_DB_SQL: &str = include_str!("./sql/init.sql");
 
-const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select_competition.sql");
-const SELECT_ALL_COMPETITIONS_SQL: &str = include_str!("./sql/select_all_competitions.sql");
-const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert_competition.sql");
-const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update_competition.sql");
+const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select/competition.sql");
+const SELECT_ALL_COMPETITIONS_SQL: &str = include_str!("./sql/select/all_competitions.sql");
+const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert/competition.sql");
+const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update/competition.sql");
 
-const SELECT_PROGRAM_SQL: &str = include_str!("./sql/select_program.sql");
-const INSERT_PROGRAM_SQL: &str = include_str!("./sql/insert_program.sql");
+const SELECT_PROGRAM_SQL: &str = include_str!("./sql/select/program.sql");
+const INSERT_PROGRAM_SQL: &str = include_str!("./sql/insert/program.sql");
 
 #[derive(Debug)]
 pub struct DB {
