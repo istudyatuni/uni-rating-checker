@@ -30,7 +30,7 @@ pub struct User {
 
 // Bot commands
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Degree {
     Bachelor,
     Master,
@@ -80,8 +80,11 @@ impl MessageRequest {
         }
 
         if text[0] == "/watch" {
-            if let Some(degree) = Degree::from(&text[2]) {
-                if text.len() == 5 {
+            // to correctly get text[2]
+            // waiting for let-chain
+            if text.len() <= 3 {}
+            else if let Some(degree) = Degree::from(&text[2]) {
+                if text.len() == 5 && degree == Degree::Master {
                     return Some(Self::Watch(Watch {
                         // TODO: use if will add more universities. also validate it
                         // uni: text[1].clone(),
