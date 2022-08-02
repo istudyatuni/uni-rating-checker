@@ -34,9 +34,13 @@ pub async fn send_competition_message(
 
 async fn send_incorrect_command_message(command: &str, chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
     let text = format!(
-        "Неверная команда, ожидается: {}",
+        "Неверная команда, ожидается:\n{}",
         match command {
-            "/watch" => "`/watch [uni] [degree] [program] [case number]`",
+            "/watch" => r#"`/watch [uni] [degree] [program] [case number]`
+`uni` - в данный момент значение игнорируется и используется `itmo`
+`degree` - в данный момент поддерживается только `master`
+`program` - номер программы, находится в ссылке: `https://abit.itmo.ru/program/[номер]`
+Например: `/watch itmo master 15000 xx-xx-xx`"#,
             _ => "",
         }
     );
