@@ -115,31 +115,7 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
             if let Some(text) = message.text {
                 let chat_id = message.from.id.to_string();
                 match MessageRequest::from(text) {
-                    Some(request) => match request {
-                        MessageRequest::Watch(args) => {
-                            match handle_competition(
-                                db,
-                                &chat_id,
-                                &args.degree.to_string(),
-                                &args.case_number,
-                                &args.program_id,
-                                true,
-                            )
-                            .await
-                            {
-                                Ok(_) => (),
-                                Err(_) => {
-                                    send_message(messages::rating_not_found, &chat_id).await?;
-                                }
-                            }
-                        }
-                        MessageRequest::IncorrectCommand(command) => {
-                            send_incorrect_command_message(&command, &chat_id).await?
-                        }
-                        MessageRequest::Help => send_message(messages::help, &chat_id).await?,
-                        MessageRequest::Start => send_message(messages::start, &chat_id).await?,
-                        MessageRequest::About => send_message(messages::about, &chat_id).await?,
-                    },
+                    Some(request) => handle_message_request(db, request, &chat_id).await?,
                     None => send_message(messages::unknown_message, &chat_id).await?,
                 }
             }
@@ -147,4 +123,37 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
     }
 
     Ok(max_update_id + 1)
+}
+
+async fn handle_message_request(
+    db: &DB,
+    request: MessageRequest,
+    chat_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match request {
+        MessageRequest::Watch(args) => {
+            let result = handle_competition(
+                db,
+                chat_id,
+                &args.degree.to_string(),
+                &args.case_number,
+                &args.program_id,
+                true,
+            )
+            .await;
+            match result {
+                Ok(_) => (),
+                Err(_) => {
+                    send_message(messages::rating_not_found, chat_id).await?;
+                }
+            }
+        }
+        MessageRequest::IncorrectCommand(command) => {
+            send_incorrect_command_message(&command, chat_id).await?
+        }
+        MessageRequest::Help => send_message(messages::help, chat_id).await?,
+        MessageRequest::Start => send_message(messages::start, chat_id).await?,
+        MessageRequest::About => send_message(messages::about, chat_id).await?,
+    };
+    Ok(())
 }
