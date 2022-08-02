@@ -14,4 +14,8 @@ CREATE TABLE IF NOT EXISTS programs (
 	uni TEXT NOT NULL,
 	name TEXT NOT NULL,
 	PRIMARY KEY (id, uni)
-)
+);
+CREATE TABLE IF NOT EXISTS cache (
+	key TEXT NOT NULL,
+	value TEXT
+);

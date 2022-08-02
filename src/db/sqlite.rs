@@ -13,6 +13,10 @@ const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update/competition.sql"
 const SELECT_PROGRAM_SQL: &str = include_str!("./sql/select/program.sql");
 const INSERT_PROGRAM_SQL: &str = include_str!("./sql/insert/program.sql");
 
+const SELECT_CACHE_SQL: &str = include_str!("./sql/select/cache.sql");
+const INSERT_CACHE_SQL: &str = include_str!("./sql/insert/cache.sql");
+const PURGE_CACHE_SQL: &str = include_str!("./sql/delete/all_cache.sql");
+
 #[derive(Debug)]
 pub struct DB {
     conn: Connection,
@@ -156,4 +160,25 @@ impl DB {
             .execute(INSERT_PROGRAM_SQL, (program_id, uni, program_name))?;
         Ok(())
     }
+    pub fn select_cache(&self, key: &str) -> Result<Option<String>> {
+        let mut statement = self.conn.prepare(SELECT_CACHE_SQL)?;
+        let result = statement.query_row(&[(":key", &key)], |row| row.get(0));
+        match result {
+            Ok(value) => Ok(Some(value)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+    pub fn insert_cache(&self, key: &str, value: &str) -> Result<()> {
+        self.conn.execute(INSERT_CACHE_SQL, (key, value))?;
+        Ok(())
+    }
+    pub fn purge_cache(&self) -> Result<()> {
+        self.conn.execute(PURGE_CACHE_SQL, ())?;
+        Ok(())
+    }
+}
+
+pub fn cache_key(degree: &str, program_id: &str) -> String {
+    format!("{degree}:{program_id}")
 }

@@ -29,7 +29,7 @@ async fn check_rating_updates(db: &DB) -> Result<(), Box<dyn std::error::Error>>
     for c in db.select_all_competitions()? {
         if let Some(case_number) = c.competition.case_number {
             handle_competition(
-                &db,
+                db,
                 &c.tg_chat_id,
                 &c.degree,
                 &case_number,
@@ -54,6 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         offset = handle_updates(&db, offset).await.unwrap();
 
         if sec_counter == 0 {
+            db.purge_cache()?;
             check_rating_updates(&db).await?;
         }
         sec_counter = (sec_counter + 1) % TEN_MIN_IN_SEC;

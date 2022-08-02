@@ -1,4 +1,4 @@
-use crate::db::sqlite::DB;
+use crate::db::sqlite::{cache_key, DB};
 use crate::model::itmo::{
     Competition, ErrorResponse, ProgramsGroup, ProgramsResponse, RatingResponse,
 };
@@ -8,17 +8,28 @@ const API_KEY: &str = "9e2eee80b266b31c8d65f1dd3992fa26eb8b4c118ca9633550889a8ff
 
 /// Get competition in rating from itmo.ru
 pub async fn get_rating_competition(
+    db: &DB,
     degree: &str,
     program_id: &str,
     case_number: &str,
 ) -> Result<Option<Competition>, Box<dyn std::error::Error>> {
-    let rating_response: RatingResponse = reqwest::get(format!(
-        "{API_PREFIX}/{API_KEY}/rating/{degree}/budget?program_id={program_id}"
-    ))
-    .await?
-    .json()
-    .await?;
+    let key = cache_key(degree, program_id);
+    let raw_json = if let Some(cached) = db.select_cache(&key)? {
+        cached
+    } else {
+        let result = reqwest::get(format!(
+            "{API_PREFIX}/{API_KEY}/rating/{degree}/budget?program_id={program_id}"
+        ))
+        .await?
+        .text()
+        .await?;
 
+        db.insert_cache(&key, &result)?;
+
+        result
+    };
+
+    let rating_response: RatingResponse = serde_json::from_str(&raw_json)?;
     match find_score(rating_response, case_number) {
         None => Err(Box::from("no matching competition")),
         competition => Ok(competition),

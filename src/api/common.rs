@@ -14,7 +14,7 @@ pub async fn handle_competition(
     program_id: &str,
     is_user_request: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let competition = get_rating_competition(degree, program_id, case_number).await?;
+    let competition = get_rating_competition(db, degree, program_id, case_number).await?;
 
     match db.select_competition(chat_id, case_number, degree, program_id) {
         Ok(old_competition) => {
