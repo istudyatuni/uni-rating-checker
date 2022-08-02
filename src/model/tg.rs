@@ -68,6 +68,7 @@ pub struct Watch {
 }
 
 pub enum MessageRequest {
+    About,
     Help,
     Start,
     Watch(Watch),
@@ -102,6 +103,7 @@ impl MessageRequest {
 
                 Some(Self::IncorrectCommand(text[0].clone()))
             }
+            "/about" => Some(Self::About),
             "/help" => Some(Self::Help),
             "/start" => Some(Self::Start),
             _ => None,

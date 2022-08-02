@@ -124,18 +124,22 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
                                 &args.case_number,
                                 &args.program_id,
                             )
-                            .await {
+                            .await
+                            {
                                 Ok(_) => (),
                                 Err(_) => {
                                     send_message(messages::rating_not_found, &chat_id).await?;
-                                },
+                                }
                             }
                         }
                         MessageRequest::IncorrectCommand(command) => {
                             send_incorrect_command_message(&command, &chat_id).await?
                         }
                         MessageRequest::Help => send_message(messages::help, &chat_id).await?,
-                        MessageRequest::Start => send_message(messages::start_message, &chat_id).await?,
+                        MessageRequest::Start => {
+                            send_message(messages::start_message, &chat_id).await?
+                        }
+                        MessageRequest::About => send_message(messages::about, &chat_id).await?,
                     },
                     None => send_message(messages::unknown_message, &chat_id).await?,
                 }
