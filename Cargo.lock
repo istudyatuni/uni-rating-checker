@@ -58,8 +58,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "const_format"
 version = "0.2.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "939dc9e2eb9077e0679d2ce32de1ded8531779360b003b4a972a7a39ec263495"
+source = "git+https://github.com/istudyatuni/const_format_crates?branch=fix-name-collision#98e90e22a9152659a8f0f5f985058bf2528f6afd"
 dependencies = [
  "const_format_proc_macros",
 ]
@@ -67,8 +66,7 @@ dependencies = [
 [[package]]
 name = "const_format_proc_macros"
 version = "0.2.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef196d5d972878a48da7decb7686eded338b4858fbabeed513d63a7c98b2b82d"
+source = "git+https://github.com/istudyatuni/const_format_crates?branch=fix-name-collision#98e90e22a9152659a8f0f5f985058bf2528f6afd"
 dependencies = [
  "proc-macro2",
  "quote",

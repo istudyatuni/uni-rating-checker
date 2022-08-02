@@ -15,8 +15,7 @@ pub const about: &str = formatcp!(
     env!("CARGO_PKG_REPOSITORY")
 );
 
-/// wait for https://github.com/rodrimati1992/const_format_crates/issues/44 to rename to `start`
-pub const start_message: &str = formatcp!("Привет\\! {description}\n{help}");
+pub const start: &str = formatcp!("Привет\\! {description}\n{help}");
 
 pub const unknown_message: &str = "Даже не знаю что сказать. Попробуй /help";
 

@@ -138,7 +138,7 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
                         }
                         MessageRequest::Help => send_message(messages::help, &chat_id).await?,
                         MessageRequest::Start => {
-                            send_message(messages::start_message, &chat_id).await?
+                            send_message(messages::start, &chat_id).await?
                         }
                         MessageRequest::About => send_message(messages::about, &chat_id).await?,
                     },
