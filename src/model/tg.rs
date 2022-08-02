@@ -68,6 +68,8 @@ pub struct Watch {
 }
 
 pub enum MessageRequest {
+    Help,
+    Start,
     Watch(Watch),
     IncorrectCommand(String),
 }
@@ -79,26 +81,30 @@ impl MessageRequest {
             return None;
         }
 
-        if text[0] == "/watch" {
-            // to correctly get text[2]
-            // waiting for let-chain
-            if text.len() <= 3 {}
-            else if let Some(degree) = Degree::from(&text[2]) {
-                if text.len() == 5 && degree == Degree::Master {
-                    return Some(Self::Watch(Watch {
-                        // TODO: use if will add more universities. also validate it
-                        // uni: text[1].clone(),
-                        uni: "itmo".to_string(),
-                        degree,
-                        program_id: text[3].clone(),
-                        case_number: text[4].clone(),
-                    }));
+        let command = text[0].as_str();
+        match command {
+            "/watch" => {
+                // to correctly get text[2]
+                // waiting for let-chain
+                if text.len() <= 3 {
+                } else if let Some(degree) = Degree::from(&text[2]) {
+                    if text.len() == 5 && degree == Degree::Master {
+                        return Some(Self::Watch(Watch {
+                            // TODO: use if will add more universities. also validate it
+                            // uni: text[1].clone(),
+                            uni: "itmo".to_string(),
+                            degree,
+                            program_id: text[3].clone(),
+                            case_number: text[4].clone(),
+                        }));
+                    }
                 }
-            }
 
-            Some(Self::IncorrectCommand(text[0].clone()))
-        } else {
-            None
+                Some(Self::IncorrectCommand(text[0].clone()))
+            }
+            "/help" => Some(Self::Help),
+            "/start" => Some(Self::Start),
+            _ => None,
         }
     }
 }

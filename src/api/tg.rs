@@ -3,6 +3,7 @@ use crate::model::itmo::Competition;
 use crate::model::tg::{ErrorResponse, GetUpdatesResponse, MessageRequest, SendMessageResponse};
 
 use super::common::handle_competition;
+use super::messages;
 
 const TG_API_PREFIX: &str = "https://api.telegram.org/bot";
 const TOKEN: &str = env!("TG_TOKEN");
@@ -27,28 +28,24 @@ pub async fn send_competition_message(
         let msg =
             format!("case_number is None\nchat_id: `{chat_id}`\nprogram_name: `{program_name}`");
         send_message(&msg, LOGS_CHAT_ID).await?;
-        "Произошла ошибка. О ней уже сообщено".to_string()
+        messages::error_occurred.to_string()
     };
     send_message(&text, chat_id).await
 }
 
-async fn send_incorrect_command_message(command: &str, chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn send_incorrect_command_message(
+    command: &str,
+    chat_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let text = format!(
-        "Неверная команда, ожидается:\n{}",
+        "{}\n{}",
+        messages::incorrect_command_header,
         match command {
-            "/watch" => r#"`/watch [uni] [degree] [program] [case number]`
-`uni` - в данный момент значение игнорируется и используется `itmo`
-`degree` - в данный момент поддерживается только `master`
-`program` - номер программы, находится в ссылке: `https://abit.itmo.ru/program/[номер]`
-Например: `/watch itmo master 15000 xx-xx-xx`"#,
+            "/watch" => messages::watch_command,
             _ => "",
         }
     );
     send_message(&text, chat_id).await
-}
-
-async fn send_no_message(chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    send_message("Даже не знаю что сказать. Попробуй /help", chat_id).await
 }
 
 pub async fn send_message(text: &str, chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -132,8 +129,10 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::er
                         MessageRequest::IncorrectCommand(command) => {
                             send_incorrect_command_message(&command, &chat_id).await?
                         }
+                        MessageRequest::Help => send_message(messages::help, &chat_id).await?,
+                        MessageRequest::Start => send_message(messages::start_message, &chat_id).await?,
                     },
-                    None => send_no_message(&chat_id).await?,
+                    None => send_message(messages::unknown_message, &chat_id).await?,
                 }
             }
         }

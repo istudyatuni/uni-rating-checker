@@ -43,7 +43,7 @@ impl DB {
                 (":tg_chat_id", &tg_chat_id),
                 (":case_number", &case_number),
                 (":program_id", &program_id),
-                (":degree", &degree)
+                (":degree", &degree),
             ],
             |row| {
                 Ok(Competition {
