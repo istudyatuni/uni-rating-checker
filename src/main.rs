@@ -24,6 +24,24 @@ fn init_db() -> Result<DB, Box<dyn std::error::Error>> {
     Ok(DB::new(&db_path)?)
 }
 
+async fn check_rating_updates(db: &DB) -> Result<(), Box<dyn std::error::Error>> {
+    // select registered watchers from 'results'
+    for c in db.select_all_competitions()? {
+        if let Some(case_number) = c.competition.case_number {
+            handle_competition(
+                &db,
+                &c.tg_chat_id,
+                &c.degree,
+                &case_number,
+                &c.program_id,
+                false,
+            )
+            .await?;
+        }
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = init_db()?;
@@ -36,22 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         offset = handle_updates(&db, offset).await.unwrap();
 
         if sec_counter == 0 {
-            // select registered watchers from 'results'
-            let competitions = db.select_all_competitions()?;
-
-            for c in competitions {
-                if let Some(case_number) = c.competition.case_number {
-                    handle_competition(
-                        &db,
-                        &c.tg_chat_id,
-                        &c.degree,
-                        &case_number,
-                        &c.program_id,
-                        false,
-                    )
-                    .await?;
-                }
-            }
+            check_rating_updates(&db).await?;
         }
         sec_counter = (sec_counter + 1) % TEN_MIN_IN_SEC;
 
