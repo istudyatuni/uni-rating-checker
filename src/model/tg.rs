@@ -51,9 +51,9 @@ impl Degree {
 impl std::fmt::Display for Degree {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
-            Degree::Bachelor => "bachelor",
-            Degree::Master => "master",
-            Degree::Postgraduate => "postgraduate",
+            Self::Bachelor => "bachelor",
+            Self::Master => "master",
+            Self::Postgraduate => "postgraduate",
         };
         write!(f, "{name}")
     }
@@ -69,16 +69,12 @@ pub struct Watch {
 
 impl Watch {
     pub fn new(uni: &str, degree: &str, program_id: &str, case_number: &str) -> Option<Self> {
-        if let Some(degree) = Degree::from(degree) {
-            Some(Self {
-                uni: uni.to_string(),
-                degree,
-                program_id: program_id.to_string(),
-                case_number: case_number.to_string(),
-            })
-        } else {
-            None
-        }
+        Degree::from(degree).map(|degree| Self {
+            uni: uni.to_string(),
+            degree,
+            program_id: program_id.to_string(),
+            case_number: case_number.to_string(),
+        })
     }
 }
 

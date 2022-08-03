@@ -1,4 +1,5 @@
 use crate::db::sqlite::DB;
+use crate::model::error::Error as CrateError;
 use crate::model::itmo::Competition;
 use crate::model::tg::{ErrorResponse, GetUpdatesResponse, MessageRequest, SendMessageResponse};
 
@@ -13,7 +14,7 @@ pub async fn send_competition_message(
     competition: &Competition,
     chat_id: &str,
     program_name: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), CrateError> {
     let text = if let Some(case_number) = &competition.case_number {
         format!(
             "*{}*\n_{}_\nПозиция {}\nВсего баллов {}\nБалл ВИ {}",
@@ -33,10 +34,7 @@ pub async fn send_competition_message(
     send_message(&text, chat_id).await
 }
 
-async fn send_incorrect_command_message(
-    command: &str,
-    chat_id: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn send_incorrect_command_message(command: &str, chat_id: &str) -> Result<(), CrateError> {
     let text = format!(
         "{}\n{}",
         messages::incorrect_command_header,
@@ -49,7 +47,7 @@ async fn send_incorrect_command_message(
     send_message(&text, chat_id).await
 }
 
-pub async fn send_message(text: &str, chat_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
     let text = &text.replace('-', "\\-").replace('.', "\\.");
 
     let params = [
@@ -58,52 +56,62 @@ pub async fn send_message(text: &str, chat_id: &str) -> Result<(), Box<dyn std::
         ("parse_mode", "MarkdownV2"),
     ];
 
-    let url =
-        reqwest::Url::parse_with_params(&format!("{TG_API_PREFIX}{TOKEN}/sendMessage"), &params)?;
-    let response = reqwest::get(url).await?;
+    let url_path = format!("{TG_API_PREFIX}{TOKEN}/sendMessage");
+    let url = match reqwest::Url::parse_with_params(&url_path, &params) {
+        Ok(u) => u,
+        Err(e) => return Err(CrateError::UrlParseError(e)),
+    };
+    let response = match reqwest::get(url).await {
+        Ok(r) => r,
+        Err(e) => return Err(CrateError::RequestError(e)),
+    };
     if !response.status().is_success() {
-        let error: ErrorResponse = response.json().await?;
-        let msg = "Cannot send message request";
-        if let Some(description) = error.description {
-            eprintln!("{msg}: {description}");
-        }
-        return Err(Box::from(msg));
+        return match response.json::<ErrorResponse>().await {
+            Ok(error) => Err(CrateError::CannotSendMessage(error.description)),
+            Err(e) => Err(CrateError::RequestError(e)),
+        };
     }
 
-    let data: SendMessageResponse = response.json().await?;
-
-    if !data.ok {
-        eprintln!(
-            "Cannot send message: {}",
-            data.description
-                .unwrap_or_else(|| "error has no description".to_string())
-        )
+    match response.json::<SendMessageResponse>().await {
+        Ok(error) => match error.ok {
+            true => Ok(()),
+            false => Err(CrateError::CannotSendMessage(error.description)),
+        },
+        Err(e) => Err(CrateError::RequestError(e)),
     }
-
-    Ok(())
 }
 
-async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, Box<dyn std::error::Error>> {
+async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
     let params = [("offset", &offset.to_string())];
-    let url =
-        reqwest::Url::parse_with_params(&format!("{TG_API_PREFIX}{TOKEN}/getUpdates"), &params)?;
+    let url_path = format!("{TG_API_PREFIX}{TOKEN}/getUpdates");
+    let url = match reqwest::Url::parse_with_params(&url_path, &params) {
+        Ok(u) => u,
+        Err(e) => return Err(CrateError::UrlParseError(e)),
+    };
 
-    let response = reqwest::get(url).await?;
+    let response = match reqwest::get(url).await {
+        Ok(r) => r,
+        Err(e) => return Err(CrateError::RequestError(e)),
+    };
     if !response.status().is_success() {
-        let error: ErrorResponse = response.json().await?;
-        let text = format!(
-            "cannot get updates\nerror: `{}`",
-            error.description.unwrap_or_default()
-        );
-        send_message(&text, LOGS_CHAT_ID).await?;
-        return Err(Box::from("cannot get updates"));
+        return match response.json::<ErrorResponse>().await {
+            Ok(error) => {
+                let to_return = CrateError::CannotGetUpdates(error.description);
+                send_message(&to_return.to_string(), LOGS_CHAT_ID).await?;
+                Err(to_return)
+            }
+            Err(e) => Err(CrateError::RequestError(e)),
+        };
     }
 
-    Ok(response.json().await?)
+    match response.json::<GetUpdatesResponse>().await {
+        Ok(r) => Ok(r),
+        Err(e) => Err(CrateError::RequestError(e)),
+    }
 }
 
 /// Get and handle updates for TG bot
-pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, Box<dyn std::error::Error>> {
+pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, CrateError> {
     let data = get_updates(offset).await?;
 
     let mut max_update_id = 0;
@@ -130,7 +138,7 @@ async fn handle_message_request(
     db: &DB,
     request: MessageRequest,
     chat_id: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), CrateError> {
     match request {
         MessageRequest::Watch(args) => {
             let result = handle_competition(
@@ -150,7 +158,12 @@ async fn handle_message_request(
             }
         }
         MessageRequest::Unwatch(args) => {
-            db.delete_competition(&args.case_number, chat_id, &args.program_id, &args.degree.to_string())?;
+            db.delete_competition(
+                &args.case_number,
+                chat_id,
+                &args.program_id,
+                &args.degree.to_string(),
+            )?;
             send_message(messages::done, chat_id).await?;
         }
         MessageRequest::UnwatchAll => {

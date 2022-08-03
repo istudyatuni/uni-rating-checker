@@ -1,4 +1,5 @@
 use crate::db::sqlite::{cache_key, DB};
+use crate::model::error::Error as CrateError;
 use crate::model::itmo::{
     Competition, ErrorResponse, ProgramsGroup, ProgramsResponse, RatingResponse,
 };
@@ -12,26 +13,38 @@ pub async fn get_rating_competition(
     degree: &str,
     program_id: &str,
     case_number: &str,
-) -> Result<Option<Competition>, Box<dyn std::error::Error>> {
+) -> Result<Option<Competition>, CrateError> {
     let key = cache_key(degree, program_id);
     let raw_json = if let Some(cached) = db.select_cache(&key)? {
         cached
     } else {
-        let result = reqwest::get(format!(
+        let response = reqwest::get(format!(
             "{API_PREFIX}/{API_KEY}/rating/{degree}/budget?program_id={program_id}"
         ))
-        .await?
-        .text()
-        .await?;
+        .await;
 
-        db.insert_cache(&key, &result)?;
-
-        result
+        match response {
+            Ok(response) => match response.text().await {
+                Ok(text) => match db.insert_cache(&key, &text) {
+                    Ok(_) => text,
+                    Err(e) => return Err(e),
+                },
+                Err(e) => return Err(CrateError::RequestError(e)),
+            },
+            Err(e) => return Err(CrateError::RequestError(e)),
+        }
     };
 
-    let rating_response: RatingResponse = serde_json::from_str(&raw_json)?;
+    let rating_response: RatingResponse = match serde_json::from_str(&raw_json) {
+        Ok(r) => r,
+        Err(e) => return Err(CrateError::DecodeJsonError(e)),
+    };
+    if rating_response.result.general_competition.is_empty() {
+        return Err(CrateError::NoRatingReturned(program_id.to_string()));
+    }
+
     match find_score(rating_response, case_number) {
-        None => Err(Box::from("no matching competition")),
+        None => Err(CrateError::NoMatchingCompetition),
         competition => Ok(competition),
     }
 }
@@ -55,27 +68,36 @@ fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition
         .cloned()
 }
 
-async fn get_programs() -> Result<Vec<ProgramsGroup>, Box<dyn std::error::Error>> {
+async fn get_programs() -> Result<Vec<ProgramsGroup>, CrateError> {
     let params = [
         ("degree", "master".to_string()),
         // enough for now
         ("limit", 100.to_string()),
         ("page", 1.to_string()),
     ];
-    let url = reqwest::Url::parse_with_params(&format!("{API_PREFIX}/programs/list"), &params)?;
-    let response = reqwest::get(url).await?;
+    let url = match reqwest::Url::parse_with_params(&format!("{API_PREFIX}/programs/list"), &params)
+    {
+        Ok(u) => u,
+        Err(e) => return Err(CrateError::UrlParseError(e)),
+    };
+    let response = match reqwest::get(url).await {
+        Ok(r) => r,
+        Err(e) => return Err(CrateError::RequestError(e)),
+    };
     if !response.status().is_success() {
-        let error: ErrorResponse = response.json().await?;
-        eprintln!("Cannot fetch programs: {}", error.message);
-        return Ok(vec![]);
+        return match response.json::<ErrorResponse>().await {
+            Ok(r) => Err(CrateError::CannotFetchPrograms(r.message)),
+            Err(e) => Err(CrateError::RequestError(e)),
+        };
     }
 
-    let data: ProgramsResponse = response.json().await?;
-
-    Ok(data.result.groups)
+    match response.json::<ProgramsResponse>().await {
+        Ok(data) => Ok(data.result.groups),
+        Err(e) => Err(CrateError::RequestError(e)),
+    }
 }
 
-pub async fn load_programs(db: &DB) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn load_programs(db: &DB) -> Result<(), CrateError> {
     let groups = get_programs().await?;
     for group in &groups {
         for program in &group.programs {

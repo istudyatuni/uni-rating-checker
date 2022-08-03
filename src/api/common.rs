@@ -2,6 +2,7 @@ use crate::db::sqlite::DB;
 
 use super::itmo::get_rating_competition;
 use super::tg::send_competition_message;
+use crate::model::error::Error as CrateError;
 
 /// If competition not exists in DB, send message
 ///
@@ -13,7 +14,7 @@ pub async fn handle_competition(
     case_number: &str,
     program_id: &str,
     is_user_request: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), CrateError> {
     let competition = get_rating_competition(db, degree, program_id, case_number).await?;
 
     match db.select_competition(chat_id, case_number, degree, program_id) {
@@ -45,9 +46,7 @@ pub async fn handle_competition(
                 }
             }
         }
-        Err(e) => {
-            eprintln!("cannot select competition: {e}")
-        }
+        Err(e) => return Err(e),
     };
     Ok(())
 }

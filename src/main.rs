@@ -1,5 +1,6 @@
 use tokio::time;
 
+use crate::model::error::Error as CrateError;
 use api::itmo::load_programs;
 use api::{common::handle_competition, tg::handle_updates};
 use db::sqlite::DB;
@@ -10,7 +11,7 @@ mod model;
 
 const TEN_MIN_IN_SEC: i32 = 10 * 60;
 
-fn init_db() -> Result<DB, Box<dyn std::error::Error>> {
+fn init_db() -> Result<DB, CrateError> {
     #[cfg(feature = "prod")]
     let db_path: String = if let Some(home_dir) = dirs::home_dir() {
         format!("{}/itmo.db", home_dir.display().to_string())
@@ -21,41 +22,67 @@ fn init_db() -> Result<DB, Box<dyn std::error::Error>> {
     #[cfg(not(feature = "prod"))]
     let db_path = "test.db".to_string();
 
-    Ok(DB::new(&db_path)?)
+    DB::new(&db_path)
 }
 
-async fn check_rating_updates(db: &DB) -> Result<(), Box<dyn std::error::Error>> {
+async fn check_rating_updates(db: &DB) -> Result<(), CrateError> {
     // select registered watchers from 'results'
-    for c in db.select_all_competitions()? {
-        if let Some(case_number) = c.competition.case_number {
-            handle_competition(
-                db,
-                &c.tg_chat_id,
-                &c.degree,
-                &case_number,
-                &c.program_id,
-                false,
-            )
-            .await?;
+    match db.select_all_competitions() {
+        Ok(competitions) => {
+            for c in competitions {
+                if let Some(case_number) = c.competition.case_number {
+                    handle_competition(
+                        db,
+                        &c.tg_chat_id,
+                        &c.degree,
+                        &case_number,
+                        &c.program_id,
+                        false,
+                    )
+                    .await?
+                }
+            }
         }
+        Err(e) => eprintln!("Error selecting all competitions: {e}"),
     }
+
     Ok(())
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let db = init_db()?;
+async fn main() -> Result<(), CrateError> {
+    let db = match init_db() {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("Error init database: {e}");
+            return Err(e);
+        }
+    };
 
-    load_programs(&db).await.unwrap();
+    match load_programs(&db).await {
+        Ok(_) => (),
+        Err(e) => {
+            eprintln!("Error loading programs: {e}");
+        }
+    }
 
     let mut offset = 0;
     let mut sec_counter = 0;
     loop {
-        offset = handle_updates(&db, offset).await.unwrap();
+        offset = match handle_updates(&db, offset).await {
+            Ok(o) => o,
+            Err(e) => {
+                eprintln!("Error handling telegram updates: {e}");
+                return Err(e);
+            }
+        };
 
         if sec_counter == 0 {
             db.purge_cache()?;
-            check_rating_updates(&db).await?;
+            match check_rating_updates(&db).await {
+                Ok(_) => (),
+                Err(e) => eprintln!("Error checking rating updates: {e}"),
+            }
         }
         sec_counter = (sec_counter + 1) % TEN_MIN_IN_SEC;
 

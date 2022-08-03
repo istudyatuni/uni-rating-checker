@@ -1,6 +1,7 @@
-use rusqlite::{Connection, Result};
+use rusqlite::Connection;
 
 use crate::model::db::DbResultItem;
+use crate::model::error::Error as CrateError;
 use crate::model::itmo::{Competition, Program};
 
 const INIT_DB_SQL: &str = include_str!("./sql/init.sql");
@@ -25,14 +26,18 @@ pub struct DB {
 }
 
 impl DB {
-    fn prepare(&self) -> Result<()> {
-        self.conn.execute_batch(INIT_DB_SQL)?;
-        Ok(())
+    fn prepare(&self) -> Result<(), CrateError> {
+        match self.conn.execute_batch(INIT_DB_SQL) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
-    pub fn new(path: &str) -> Result<Self> {
-        let db = Self {
-            conn: Connection::open(path)?,
+    pub fn new(path: &str) -> Result<Self, CrateError> {
+        let conn = match Connection::open(path) {
+            Ok(c) => c,
+            Err(e) => return Err(CrateError::DbError(e)),
         };
+        let db = Self { conn };
         db.prepare()?;
         Ok(db)
     }
@@ -42,8 +47,11 @@ impl DB {
         case_number: &str,
         degree: &str,
         program_id: &str,
-    ) -> Result<Option<Competition>> {
-        let mut statement = self.conn.prepare(SELECT_COMPETITION_SQL)?;
+    ) -> Result<Option<Competition>, CrateError> {
+        let mut statement = match self.conn.prepare(SELECT_COMPETITION_SQL) {
+            Ok(s) => s,
+            Err(e) => return Err(CrateError::DbError(e)),
+        };
         let result = statement.query_row(
             &[
                 (":tg_chat_id", &tg_chat_id),
@@ -64,11 +72,14 @@ impl DB {
         match result {
             Ok(competition) => Ok(Some(competition)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e),
+            Err(e) => Err(CrateError::DbError(e)),
         }
     }
-    pub fn select_all_competitions(&self) -> Result<Vec<DbResultItem>> {
-        let mut statement = self.conn.prepare(SELECT_ALL_COMPETITIONS_SQL)?;
+    pub fn select_all_competitions(&self) -> Result<Vec<DbResultItem>, CrateError> {
+        let mut statement = match self.conn.prepare(SELECT_ALL_COMPETITIONS_SQL) {
+            Ok(s) => s,
+            Err(e) => return Err(CrateError::DbError(e)),
+        };
         let result = statement.query_map((), |row| {
             Ok(DbResultItem {
                 tg_chat_id: row.get(0)?,
@@ -90,7 +101,7 @@ impl DB {
                 .filter_map(|c| if let Ok(c) = c { Some(c) } else { None })
                 .collect()),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(vec![]),
-            Err(e) => Err(e),
+            Err(e) => Err(CrateError::DbError(e)),
         }
     }
     pub fn insert_competition(
@@ -99,12 +110,12 @@ impl DB {
         tg_chat_id: &str,
         program_id: &str,
         degree: &str,
-    ) -> Result<()> {
+    ) -> Result<(), CrateError> {
         if competition.case_number.is_none() {
             eprintln!("trying insert, but case_number is none");
             return Ok(());
         }
-        self.conn.execute(
+        match self.conn.execute(
             INSERT_COMPETITION_SQL,
             (
                 tg_chat_id,
@@ -116,8 +127,10 @@ impl DB {
                 competition.total_scores,
                 competition.exam_scores,
             ),
-        )?;
-        Ok(())
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
     pub fn update_competition(
         &self,
@@ -125,8 +138,8 @@ impl DB {
         tg_chat_id: &str,
         program_id: &str,
         degree: &str,
-    ) -> Result<()> {
-        self.conn.execute(
+    ) -> Result<(), CrateError> {
+        match self.conn.execute(
             UPDATE_COMPETITION_SQL,
             (
                 tg_chat_id,
@@ -138,8 +151,10 @@ impl DB {
                 competition.total_scores,
                 competition.exam_scores,
             ),
-        )?;
-        Ok(())
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
     pub fn delete_competition(
         &self,
@@ -147,19 +162,33 @@ impl DB {
         tg_chat_id: &str,
         program_id: &str,
         degree: &str,
-    ) -> Result<()> {
-        self.conn.execute(
+    ) -> Result<(), CrateError> {
+        match self.conn.execute(
             DELETE_COMPETITION_SQL,
             (tg_chat_id, case_number, program_id, degree),
-        )?;
-        Ok(())
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
-    pub fn delete_competition_by_user(&self, tg_chat_id: &str) -> Result<()> {
-        self.conn.execute(DELETE_COMPETITION_BY_USER_SQL, (tg_chat_id,))?;
-        Ok(())
+    pub fn delete_competition_by_user(&self, tg_chat_id: &str) -> Result<(), CrateError> {
+        match self
+            .conn
+            .execute(DELETE_COMPETITION_BY_USER_SQL, (tg_chat_id,))
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
-    pub fn select_program(&self, uni: &str, program_id: &str) -> Result<Option<Program>> {
-        let mut statement = self.conn.prepare(SELECT_PROGRAM_SQL)?;
+    pub fn select_program(
+        &self,
+        uni: &str,
+        program_id: &str,
+    ) -> Result<Option<Program>, CrateError> {
+        let mut statement = match self.conn.prepare(SELECT_PROGRAM_SQL) {
+            Ok(s) => s,
+            Err(e) => return Err(CrateError::DbError(e)),
+        };
 
         let result = statement.query_row(&[(":id", program_id), (":uni", uni)], |row| {
             Ok(Program {
@@ -171,30 +200,46 @@ impl DB {
         match result {
             Ok(program) => Ok(Some(program)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e),
+            Err(e) => Err(CrateError::DbError(e)),
         }
     }
-    pub fn insert_program(&self, uni: &str, program_id: &str, program_name: &str) -> Result<()> {
-        self.conn
-            .execute(INSERT_PROGRAM_SQL, (program_id, uni, program_name))?;
-        Ok(())
+    pub fn insert_program(
+        &self,
+        uni: &str,
+        program_id: &str,
+        program_name: &str,
+    ) -> Result<(), CrateError> {
+        match self
+            .conn
+            .execute(INSERT_PROGRAM_SQL, (program_id, uni, program_name))
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
-    pub fn select_cache(&self, key: &str) -> Result<Option<String>> {
-        let mut statement = self.conn.prepare(SELECT_CACHE_SQL)?;
+    pub fn select_cache(&self, key: &str) -> Result<Option<String>, CrateError> {
+        let mut statement = match self.conn.prepare(SELECT_CACHE_SQL) {
+            Ok(s) => s,
+            Err(e) => return Err(CrateError::DbError(e)),
+        };
         let result = statement.query_row(&[(":key", &key)], |row| row.get(0));
         match result {
             Ok(value) => Ok(Some(value)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e),
+            Err(e) => Err(CrateError::DbError(e)),
         }
     }
-    pub fn insert_cache(&self, key: &str, value: &str) -> Result<()> {
-        self.conn.execute(INSERT_CACHE_SQL, (key, value))?;
-        Ok(())
+    pub fn insert_cache(&self, key: &str, value: &str) -> Result<(), CrateError> {
+        match self.conn.execute(INSERT_CACHE_SQL, (key, value)) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
-    pub fn purge_cache(&self) -> Result<()> {
-        self.conn.execute(PURGE_CACHE_SQL, ())?;
-        Ok(())
+    pub fn purge_cache(&self) -> Result<(), CrateError> {
+        match self.conn.execute(PURGE_CACHE_SQL, ()) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
+        }
     }
 }
 
