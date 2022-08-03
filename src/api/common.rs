@@ -1,7 +1,7 @@
 use crate::db::sqlite::DB;
 
 use super::itmo::get_rating_competition;
-use super::tg::send_competition_message;
+use super::tg::{send_competition_message, send_log};
 use crate::model::error::Error as CrateError;
 
 /// If competition not exists in DB, send message
@@ -42,7 +42,12 @@ pub async fn handle_competition(
 
                 // send if it's user request or record in db was updated
                 if is_user_request || should_send_message {
-                    send_competition_message(&competition, chat_id, &program_name).await?;
+                    if let Err(e) =
+                        send_competition_message(&competition, chat_id, &program_name).await
+                    {
+                        send_log(&format!("cannot send competition to chat {chat_id}:\n{e}"))
+                            .await?;
+                    }
                 }
             }
         }

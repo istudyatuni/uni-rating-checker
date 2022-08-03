@@ -28,7 +28,7 @@ pub async fn send_competition_message(
         // this should never be called
         let msg =
             format!("case_number is None\nchat_id: `{chat_id}`\nprogram_name: `{program_name}`");
-        send_message(&msg, LOGS_CHAT_ID).await?;
+        send_log(&msg).await?;
         messages::error_occurred.to_string()
     };
     send_message(&text, chat_id).await
@@ -85,6 +85,10 @@ pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
     }
 }
 
+pub async fn send_log(text: &str) -> Result<(), CrateError> {
+    send_message(text, LOGS_CHAT_ID).await
+}
+
 async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
     let params = [("offset", &offset.to_string())];
     let url_path = format!("{TG_API_PREFIX}{TOKEN}/getUpdates");
@@ -101,7 +105,7 @@ async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
         return match response.json::<ErrorResponse>().await {
             Ok(error) => {
                 let to_return = CrateError::CannotGetUpdates(error.description);
-                send_message(&to_return.to_string(), LOGS_CHAT_ID).await?;
+                send_log(&to_return.to_string()).await?;
                 Err(to_return)
             }
             Err(e) => Err(CrateError::RequestError(e)),
@@ -132,13 +136,10 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, CrateError> {
                         if let Err(e) = handle_message_request(db, request, &chat_id).await {
                             if let CrateError::CannotSendMessage(description) = e {
                                 // send message if it was a client error, for example, bot blocked by user
-                                send_message(
-                                    &format!(
-                                        "cannot send message to chat {chat_id}:\n{}",
-                                        description.unwrap_or_default()
-                                    ),
-                                    LOGS_CHAT_ID,
-                                )
+                                send_log(&format!(
+                                    "cannot send message to chat {chat_id}:\n{}",
+                                    description.unwrap_or_default()
+                                ))
                                 .await?
                             } else {
                                 return Err(e);
