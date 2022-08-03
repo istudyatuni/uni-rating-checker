@@ -67,10 +67,27 @@ pub struct Watch {
     pub case_number: String,
 }
 
+impl Watch {
+    pub fn new(uni: &str, degree: &str, program_id: &str, case_number: &str) -> Option<Self> {
+        if let Some(degree) = Degree::from(degree) {
+            Some(Self {
+                uni: uni.to_string(),
+                degree,
+                program_id: program_id.to_string(),
+                case_number: case_number.to_string(),
+            })
+        } else {
+            None
+        }
+    }
+}
+
 pub enum MessageRequest {
     About,
     Help,
     Start,
+    Unwatch(Watch),
+    UnwatchAll,
     Watch(Watch),
     IncorrectCommand(String),
 }
@@ -84,24 +101,28 @@ impl MessageRequest {
 
         let command = text[0].as_str();
         match command {
-            "/watch" => {
-                // to correctly get text[2]
+            "/watch" | "/unwatch" => {
+                let incorrect_command = Some(Self::IncorrectCommand(command.to_string()));
+
+                if text.len() < 5 {
+                    if text.len() == 2 && text[1] == "all" {
+                        return Some(Self::UnwatchAll);
+                    }
+                    return incorrect_command;
+                }
+
                 // waiting for let-chain
-                if text.len() <= 3 {
-                } else if let Some(degree) = Degree::from(&text[2]) {
-                    if text.len() == 5 && degree == Degree::Master {
-                        return Some(Self::Watch(Watch {
-                            // TODO: use if will add more universities. also validate it
-                            // uni: text[1].clone(),
-                            uni: "itmo".to_string(),
-                            degree,
-                            program_id: text[3].clone(),
-                            case_number: text[4].clone(),
-                        }));
+                if let Some(watch) = Watch::new("itmo", &text[2], &text[3], &text[4]) {
+                    if watch.degree == Degree::Master {
+                        return match command {
+                            "/watch" => Some(Self::Watch(watch)),
+                            "/unwatch" => Some(Self::Unwatch(watch)),
+                            _ => incorrect_command,
+                        };
                     }
                 }
 
-                Some(Self::IncorrectCommand(text[0].clone()))
+                incorrect_command
             }
             "/about" => Some(Self::About),
             "/help" => Some(Self::Help),

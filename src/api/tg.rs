@@ -42,6 +42,7 @@ async fn send_incorrect_command_message(
         messages::incorrect_command_header,
         match command {
             "/watch" => messages::watch_command,
+            "/unwatch" => messages::unwatch_command,
             _ => "",
         }
     );
@@ -147,6 +148,14 @@ async fn handle_message_request(
                     send_message(messages::rating_not_found, chat_id).await?;
                 }
             }
+        }
+        MessageRequest::Unwatch(args) => {
+            db.delete_competition(&args.case_number, chat_id, &args.program_id, &args.degree.to_string())?;
+            send_message(messages::done, chat_id).await?;
+        }
+        MessageRequest::UnwatchAll => {
+            db.delete_competition_by_user(chat_id)?;
+            send_message(messages::done, chat_id).await?;
         }
         MessageRequest::IncorrectCommand(command) => {
             send_incorrect_command_message(&command, chat_id).await?

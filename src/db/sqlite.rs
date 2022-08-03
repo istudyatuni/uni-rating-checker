@@ -9,6 +9,8 @@ const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select/competition.sql"
 const SELECT_ALL_COMPETITIONS_SQL: &str = include_str!("./sql/select/all_competitions.sql");
 const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert/competition.sql");
 const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update/competition.sql");
+const DELETE_COMPETITION_SQL: &str = include_str!("./sql/delete/competition.sql");
+const DELETE_COMPETITION_BY_USER_SQL: &str = include_str!("./sql/delete/competitions_by_user.sql");
 
 const SELECT_PROGRAM_SQL: &str = include_str!("./sql/select/program.sql");
 const INSERT_PROGRAM_SQL: &str = include_str!("./sql/insert/program.sql");
@@ -137,6 +139,23 @@ impl DB {
                 competition.exam_scores,
             ),
         )?;
+        Ok(())
+    }
+    pub fn delete_competition(
+        &self,
+        case_number: &str,
+        tg_chat_id: &str,
+        program_id: &str,
+        degree: &str,
+    ) -> Result<()> {
+        self.conn.execute(
+            DELETE_COMPETITION_SQL,
+            (tg_chat_id, case_number, program_id, degree),
+        )?;
+        Ok(())
+    }
+    pub fn delete_competition_by_user(&self, tg_chat_id: &str) -> Result<()> {
+        self.conn.execute(DELETE_COMPETITION_BY_USER_SQL, (tg_chat_id,))?;
         Ok(())
     }
     pub fn select_program(&self, uni: &str, program_id: &str) -> Result<Option<Program>> {
