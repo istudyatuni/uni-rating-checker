@@ -9,6 +9,8 @@ pub enum Error {
     /// error when fetching programs
     CannotFetchPrograms(String),
     /// error when sending message
+    SendMessageError(Option<String>),
+    /// we can't send message, e.g. bot blocked by user
     CannotSendMessage(Option<String>),
     CannotGetUpdates(Option<String>),
 
@@ -27,6 +29,12 @@ impl std::fmt::Display for Error {
                 format!("no rating returned for program {program_id}")
             }
             Self::CannotFetchPrograms(message) => format!("Cannot fetch programs: {}", message),
+            Self::SendMessageError(description) => format!(
+                "Error sending message: {}",
+                description
+                    .clone()
+                    .unwrap_or_else(|| "error has no description".to_string())
+            ),
             Self::CannotSendMessage(description) => format!(
                 "Cannot send message: {}",
                 description

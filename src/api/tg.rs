@@ -66,8 +66,12 @@ pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
         Err(e) => return Err(CrateError::RequestError(e)),
     };
     if !response.status().is_success() {
+        let is_client_error = response.status().is_client_error();
         return match response.json::<ErrorResponse>().await {
-            Ok(error) => Err(CrateError::CannotSendMessage(error.description)),
+            Ok(error) => match is_client_error {
+                true => Err(CrateError::CannotSendMessage(error.description)),
+                false => Err(CrateError::SendMessageError(error.description)),
+            },
             Err(e) => Err(CrateError::RequestError(e)),
         };
     }
@@ -75,7 +79,7 @@ pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
     match response.json::<SendMessageResponse>().await {
         Ok(error) => match error.ok {
             true => Ok(()),
-            false => Err(CrateError::CannotSendMessage(error.description)),
+            false => Err(CrateError::SendMessageError(error.description)),
         },
         Err(e) => Err(CrateError::RequestError(e)),
     }
@@ -124,7 +128,23 @@ pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, CrateError> {
             if let Some(text) = message.text {
                 let chat_id = message.from.id.to_string();
                 match MessageRequest::from(text) {
-                    Some(request) => handle_message_request(db, request, &chat_id).await?,
+                    Some(request) => {
+                        if let Err(e) = handle_message_request(db, request, &chat_id).await {
+                            if let CrateError::CannotSendMessage(description) = e {
+                                // send message if it was a client error, for example, bot blocked by user
+                                send_message(
+                                    &format!(
+                                        "cannot send message to chat {chat_id}:\n{}",
+                                        description.unwrap_or_default()
+                                    ),
+                                    LOGS_CHAT_ID,
+                                )
+                                .await?
+                            } else {
+                                return Err(e);
+                            }
+                        }
+                    }
                     None => send_message(messages::unknown_message, &chat_id).await?,
                 }
             }
