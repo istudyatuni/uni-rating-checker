@@ -28,6 +28,8 @@ pub const rating_not_found: &str = "По этим данным ничего не
 
 pub const done: &str = "Сделано";
 
+pub const easter_egg: &str = "О, ты нашел пасхалку. Мои поздравления";
+
 // commands description
 
 pub const watch_command: &str = r#"`/watch [uni] [degree] [program] [case number]`

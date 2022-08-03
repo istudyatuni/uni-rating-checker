@@ -20,6 +20,8 @@ const SELECT_CACHE_SQL: &str = include_str!("./sql/select/cache.sql");
 const INSERT_CACHE_SQL: &str = include_str!("./sql/insert/cache.sql");
 const PURGE_CACHE_SQL: &str = include_str!("./sql/delete/all_cache.sql");
 
+const SELECT_STATISTICS_CHATS_SQL: &str = include_str!("./sql/select/statistics_chats.sql");
+
 #[derive(Debug)]
 pub struct DB {
     conn: Connection,
@@ -239,6 +241,17 @@ impl DB {
         match self.conn.execute(PURGE_CACHE_SQL, ()) {
             Ok(_) => Ok(()),
             Err(e) => Err(CrateError::DbError(e)),
+        }
+    }
+    pub fn select_statistics(&self) -> Result<i32, CrateError> {
+        let mut statement = match self.conn.prepare(SELECT_STATISTICS_CHATS_SQL) {
+            Ok(s) => s,
+            Err(e) => return Err(CrateError::DbError(e)),
+        };
+        let result = statement.query_row((), |row| row.get(0));
+        match result {
+            Ok(count) => Ok(count),
+            Err(_) => Ok(0),
         }
     }
 }

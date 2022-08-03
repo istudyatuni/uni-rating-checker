@@ -208,6 +208,14 @@ async fn handle_message_request(
         }
         MessageRequest::Help => send_message(messages::help, chat_id).await?,
         MessageRequest::Start => send_message(messages::start, chat_id).await?,
+        MessageRequest::Statistics => {
+            send_log(&format!(
+                "statistics:\n{} unique watchers",
+                db.select_statistics()?
+            ))
+            .await?;
+            send_message(messages::easter_egg, chat_id).await?
+        }
         MessageRequest::About => send_message(messages::about, chat_id).await?,
     };
     Ok(())
