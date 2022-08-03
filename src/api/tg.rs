@@ -86,7 +86,10 @@ pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
 }
 
 pub async fn send_log(text: &str) -> Result<(), CrateError> {
-    send_message(text, LOGS_CHAT_ID).await
+    if let Err(e) = send_message(text, LOGS_CHAT_ID).await {
+        eprintln!("failed to send log: {text}\nerror: {e}")
+    }
+    Ok(())
 }
 
 async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
