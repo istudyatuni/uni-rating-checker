@@ -2,7 +2,7 @@
 name = "uni-rating-checker"
 version = "0.1.0"
 edition = "2021"
-repository = "https://github.com"
+repository = "https://github.com/istudyatuni/uni-rating-checker"
 
 [features]
 prod = ["dirs"]
