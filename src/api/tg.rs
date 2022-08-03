@@ -122,6 +122,15 @@ async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
 pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, CrateError> {
     let data = get_updates(offset).await?;
 
+    // just want to know
+    let updates_count = data.result.len();
+    if updates_count > 2 {
+        let msg = format!("{updates_count} updates in a row");
+        if (send_log(&msg).await).is_err() {
+            println!("{msg}");
+        }
+    }
+
     let mut max_update_id = 0;
     for update in data.result {
         if update.update_id > max_update_id {
