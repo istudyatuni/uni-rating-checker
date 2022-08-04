@@ -183,11 +183,8 @@ async fn handle_message_request(
                 true,
             )
             .await;
-            match result {
-                Ok(_) => (),
-                Err(_) => {
-                    send_message(messages::rating_not_found, chat_id).await?;
-                }
+            if result.is_err() {
+                send_message(messages::rating_not_found, chat_id).await?;
             }
         }
         MessageRequest::Unwatch(args) => {
