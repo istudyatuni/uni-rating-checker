@@ -13,7 +13,7 @@ pub type ErrorResponse = Response<Option<()>>;
 
 #[derive(Debug, Deserialize)]
 pub struct Update {
-    pub update_id: i32,
+    pub update_id: i64,
     pub message: Option<Message>,
 }
 
@@ -25,7 +25,7 @@ pub struct Message {
 
 #[derive(Debug, Deserialize)]
 pub struct User {
-    pub id: i32,
+    pub id: i64,
 }
 
 // Bot commands

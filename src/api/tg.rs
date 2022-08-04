@@ -92,7 +92,7 @@ pub async fn send_log(text: &str) -> Result<(), CrateError> {
     Ok(())
 }
 
-async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
+async fn get_updates(offset: i64) -> Result<GetUpdatesResponse, CrateError> {
     let params = [("offset", &offset.to_string())];
     let url_path = format!("{TG_API_PREFIX}{TOKEN}/getUpdates");
     let url = match reqwest::Url::parse_with_params(&url_path, &params) {
@@ -122,7 +122,7 @@ async fn get_updates(offset: i32) -> Result<GetUpdatesResponse, CrateError> {
 }
 
 /// Get and handle updates for TG bot
-pub async fn handle_updates(db: &DB, offset: i32) -> Result<i32, CrateError> {
+pub async fn handle_updates(db: &DB, offset: i64) -> Result<i64, CrateError> {
     let data = get_updates(offset).await?;
 
     // just want to know
