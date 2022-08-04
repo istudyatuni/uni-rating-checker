@@ -1,11 +1,8 @@
 use tokio::time;
 
 use crate::model::error::Error as CrateError;
-use api::common::handle_competition;
 use api::itmo::load_programs;
-use api::tg::handle_updates;
-#[cfg(feature = "migrate")]
-use api::{messages, tg::send_message};
+use api::{common::handle_competition, tg::handle_updates};
 use db::sqlite::DB;
 
 mod api;
@@ -52,17 +49,6 @@ async fn check_rating_updates(db: &DB) -> Result<(), CrateError> {
     Ok(())
 }
 
-#[cfg(feature = "migrate")]
-async fn migrate(db: &DB) -> Result<(), CrateError> {
-    for chat_id in db.select_uniq_chats()? {
-        if let Err(e) = send_message(messages::migrate, &chat_id).await {
-            eprintln!("Cannot send migrate message to {chat_id}: {e}");
-        }
-    }
-    Ok(())
-}
-
-#[cfg_attr(feature = "migrate", allow(unreachable_code))]
 #[tokio::main]
 async fn main() -> Result<(), CrateError> {
     let db = match init_db() {
@@ -72,12 +58,6 @@ async fn main() -> Result<(), CrateError> {
             return Err(e);
         }
     };
-
-    #[cfg(feature = "migrate")]
-    {
-        migrate(&db).await?;
-        return Ok(());
-    }
 
     match load_programs(&db).await {
         Ok(_) => (),
