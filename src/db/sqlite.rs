@@ -21,6 +21,8 @@ const INSERT_CACHE_SQL: &str = include_str!("./sql/insert/cache.sql");
 const PURGE_CACHE_SQL: &str = include_str!("./sql/delete/all_cache.sql");
 
 const SELECT_STATISTICS_CHATS_SQL: &str = include_str!("./sql/select/statistics_chats.sql");
+const SELECT_DELETED_CHATS_SQL: &str = include_str!("./sql/select/deleted.sql");
+const INSERT_DELETED_CHAT_SQL: &str = include_str!("./sql/insert/deleted.sql");
 
 #[derive(Debug)]
 pub struct DB {
@@ -244,7 +246,10 @@ impl DB {
         }
     }
     pub fn select_statistics(&self) -> Result<i32, CrateError> {
-        let mut statement = match self.conn.prepare(SELECT_STATISTICS_CHATS_SQL) {
+        self.select_count(SELECT_STATISTICS_CHATS_SQL)
+    }
+    fn select_count(&self, query: &'static str) -> Result<i32, CrateError> {
+        let mut statement = match self.conn.prepare(query) {
             Ok(s) => s,
             Err(e) => return Err(CrateError::DbError(e)),
         };
@@ -252,6 +257,15 @@ impl DB {
         match result {
             Ok(count) => Ok(count),
             Err(_) => Ok(0),
+        }
+    }
+    pub fn select_deleted_chats(&self) -> Result<i32, CrateError> {
+        self.select_count(SELECT_DELETED_CHATS_SQL)
+    }
+    pub fn insert_deleted_chat(&self, chat_id: &str) -> Result<(), CrateError> {
+        match self.conn.execute(INSERT_DELETED_CHAT_SQL, (chat_id,)) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CrateError::DbError(e)),
         }
     }
 }

@@ -194,10 +194,12 @@ async fn handle_message_request(
                 &args.program_id,
                 &args.degree.to_string(),
             )?;
+            db.insert_deleted_chat(chat_id)?;
             send_message(messages::done, chat_id).await?;
         }
         MessageRequest::UnwatchAll => {
             db.delete_competition_by_user(chat_id)?;
+            db.insert_deleted_chat(chat_id)?;
             send_message(messages::done, chat_id).await?;
         }
         MessageRequest::IncorrectCommand(command) => {
@@ -207,8 +209,9 @@ async fn handle_message_request(
         MessageRequest::Start => send_message(messages::start, chat_id).await?,
         MessageRequest::Statistics => {
             send_log(&format!(
-                "statistics:\n{} unique watchers",
-                db.select_statistics()?
+                "statistics:\n{} unique watchers\n{} deleted chats \\(may overlap the number of watchers\\)",
+                db.select_statistics()?,
+                db.select_deleted_chats()?
             ))
             .await?;
             send_message(messages::easter_egg, chat_id).await?

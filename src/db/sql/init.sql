@@ -19,3 +19,6 @@ CREATE TABLE IF NOT EXISTS cache (
 	key TEXT NOT NULL,
 	value TEXT
 );
+CREATE TABLE IF NOT EXISTS deleted (
+	tg_chat_id TEXT NOT NULL
+);
