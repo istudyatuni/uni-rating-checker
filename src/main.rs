@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use tokio::time;
 
 use crate::model::error::Error as CrateError;
@@ -9,7 +11,7 @@ mod api;
 mod db;
 mod model;
 
-const TEN_MIN_IN_SEC: i32 = 10 * 60;
+const TEN_MIN: Duration = Duration::from_secs(10 * 60);
 
 fn init_db() -> Result<DB, CrateError> {
     #[cfg(feature = "prod")]
@@ -67,7 +69,7 @@ async fn main() -> Result<(), CrateError> {
     }
 
     let mut offset = 0;
-    let mut sec_counter = 0;
+    let mut timer = Instant::now();
     loop {
         offset = match handle_updates(&db, offset).await {
             Ok(o) => o,
@@ -77,14 +79,14 @@ async fn main() -> Result<(), CrateError> {
             }
         };
 
-        if sec_counter == 0 {
+        if timer.elapsed() >= TEN_MIN {
             db.purge_cache()?;
             match check_rating_updates(&db).await {
                 Ok(_) => (),
                 Err(e) => eprintln!("Error checking rating updates: {e}"),
             }
+            timer = Instant::now();
         }
-        sec_counter = (sec_counter + 1) % TEN_MIN_IN_SEC;
 
         time::sleep(time::Duration::from_secs(1)).await;
     }
