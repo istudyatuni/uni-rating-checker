@@ -22,6 +22,9 @@ const PURGE_CACHE_SQL: &str = include_str!("./sql/delete/all_cache.sql");
 
 const SELECT_STATISTICS_CHATS_SQL: &str = include_str!("./sql/select/statistics_chats.sql");
 
+#[cfg(feature = "migrate")]
+const SELECT_CHAT_IDS_SQL: &str = include_str!("./sql/select/chat_ids.sql");
+
 #[derive(Debug)]
 pub struct DB {
     conn: Connection,
@@ -252,6 +255,21 @@ impl DB {
         match result {
             Ok(count) => Ok(count),
             Err(_) => Ok(0),
+        }
+    }
+    #[cfg(feature = "migrate")]
+    pub fn select_uniq_chats(&self) -> Result<Vec<String>, CrateError> {
+        let mut statement = match self.conn.prepare(SELECT_CHAT_IDS_SQL) {
+            Ok(s) => s,
+            Err(e) => return Err(CrateError::DbError(e)),
+        };
+        let result = statement.query_map((), |row| row.get(0));
+        match result {
+            Ok(items) => Ok(items
+                .into_iter()
+                .filter_map(|c| if let Ok(c) = c { Some(c) } else { None })
+                .collect()),
+            Err(e) => Err(CrateError::DbError(e)),
         }
     }
 }

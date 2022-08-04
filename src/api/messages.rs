@@ -30,6 +30,12 @@ pub const done: &str = "Сделано";
 
 pub const easter_egg: &str = "О, ты нашел пасхалку. Мои поздравления";
 
+#[cfg(feature = "migrate")]
+pub const migrate: &str = formatcp!(
+    "Бот переезжает: {}\nСкоро будет доступен",
+    env!("NEW_BOT_URL")
+);
+
 // commands description
 
 pub const watch_command: &str = r#"`/watch [uni] [degree] [program] [case number]`

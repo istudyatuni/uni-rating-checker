@@ -6,6 +6,7 @@ repository = "https://github.com/istudyatuni/uni-rating-checker"
 
 [features]
 prod = ["dirs"]
+migrate = []
 
 [dependencies]
 dirs = { version = "4.0.0", optional = true }

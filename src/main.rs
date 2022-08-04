@@ -1,8 +1,11 @@
 use tokio::time;
 
 use crate::model::error::Error as CrateError;
+use api::common::handle_competition;
 use api::itmo::load_programs;
-use api::{common::handle_competition, tg::handle_updates};
+use api::tg::handle_updates;
+#[cfg(feature = "migrate")]
+use api::{messages, tg::send_message};
 use db::sqlite::DB;
 
 mod api;
@@ -14,7 +17,7 @@ const TEN_MIN_IN_SEC: i32 = 10 * 60;
 fn init_db() -> Result<DB, CrateError> {
     #[cfg(feature = "prod")]
     let db_path: String = if let Some(home_dir) = dirs::home_dir() {
-        format!("{}/itmo.db", home_dir.display().to_string())
+        format!("{}/itmo.db", home_dir.display())
     } else {
         eprintln!("no $HOME for storing database file, using /");
         "/itmo.db".to_string()
@@ -49,6 +52,17 @@ async fn check_rating_updates(db: &DB) -> Result<(), CrateError> {
     Ok(())
 }
 
+#[cfg(feature = "migrate")]
+async fn migrate(db: &DB) -> Result<(), CrateError> {
+    for chat_id in db.select_uniq_chats()? {
+        if let Err(e) = send_message(messages::migrate, &chat_id).await {
+            eprintln!("Cannot send migrate message to {chat_id}: {e}");
+        }
+    }
+    Ok(())
+}
+
+#[cfg_attr(feature = "migrate", allow(unreachable_code))]
 #[tokio::main]
 async fn main() -> Result<(), CrateError> {
     let db = match init_db() {
@@ -58,6 +72,12 @@ async fn main() -> Result<(), CrateError> {
             return Err(e);
         }
     };
+
+    #[cfg(feature = "migrate")]
+    {
+        migrate(&db).await?;
+        return Ok(());
+    }
 
     match load_programs(&db).await {
         Ok(_) => (),
