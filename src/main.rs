@@ -61,11 +61,8 @@ async fn main() -> Result<(), CrateError> {
         }
     };
 
-    match load_programs(&db).await {
-        Ok(_) => (),
-        Err(e) => {
-            eprintln!("Error loading programs: {e}");
-        }
+    if let Err(e) = load_programs(&db).await {
+        eprintln!("Error loading programs: {e}");
     }
 
     let mut offset = 0;
@@ -81,9 +78,8 @@ async fn main() -> Result<(), CrateError> {
 
         if timer.elapsed() >= TEN_MIN {
             db.purge_cache()?;
-            match check_rating_updates(&db).await {
-                Ok(_) => (),
-                Err(e) => eprintln!("Error checking rating updates: {e}"),
+            if let Err(e) = check_rating_updates(&db).await {
+                eprintln!("Error checking rating updates: {e}")
             }
             timer = Instant::now();
         }
