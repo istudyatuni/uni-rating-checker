@@ -1,9 +1,9 @@
 const ENV_FILE: &str = include_str!(".env");
 
 fn main() {
-    for line in ENV_FILE.split_whitespace() {
+    for line in ENV_FILE.split('\n') {
         let line = line.trim();
-        if line.starts_with('#') {
+        if line.starts_with('#') || line.is_empty() {
             continue;
         }
         if line.ends_with('=') {
