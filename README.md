@@ -24,7 +24,13 @@ cargo r --release
 
 You need cross [installed](https://github.com/cross-rs/cross#installation) for building static-linked binary.
 
-Follow steps from "Running locally", then run:
+Follow steps from "Running locally", also add to `.env` token for production bot:
+
+```sh
+TG_TOKEN_PROD=TOKEN-HERE
+```
+
+then run:
 
 ```sh
 cross b --release --features prod
