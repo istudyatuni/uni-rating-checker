@@ -65,7 +65,7 @@ async fn main() -> Result<(), CrateError> {
     }
 
     let mut offset = 0;
-    let mut timer = Instant::now();
+    let mut timer = check_rating_updates_wrapper(&db).await?;
     loop {
         offset = match handle_updates(&db, offset).await {
             Ok(o) => o,
@@ -76,13 +76,17 @@ async fn main() -> Result<(), CrateError> {
         };
 
         if timer.elapsed() >= TEN_MIN {
-            db.purge_cache()?;
-            if let Err(e) = check_rating_updates(&db).await {
-                eprintln!("Error checking rating updates: {e}")
-            }
-            timer = Instant::now();
+            timer = check_rating_updates_wrapper(&db).await?;
         }
 
         tokio::time::sleep(SLEEP_DURATION).await;
     }
+}
+
+async fn check_rating_updates_wrapper(db: &DB) -> Result<Instant, CrateError> {
+    db.purge_cache()?;
+    if let Err(e) = check_rating_updates(db).await {
+        eprintln!("Error checking rating updates: {e}")
+    }
+    Ok(Instant::now())
 }
