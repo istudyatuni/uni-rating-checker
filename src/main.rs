@@ -1,7 +1,5 @@
 use std::time::{Duration, Instant};
 
-use tokio::time;
-
 use crate::model::error::Error as CrateError;
 use api::itmo::load_programs;
 use api::{common::handle_competition, tg::handle_updates};
@@ -84,6 +82,6 @@ async fn main() -> Result<(), CrateError> {
             timer = Instant::now();
         }
 
-        time::sleep(time::Duration::from_secs(1)).await;
+        tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }
