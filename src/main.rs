@@ -9,6 +9,7 @@ mod api;
 mod db;
 mod model;
 
+const SLEEP_DURATION: Duration = Duration::from_secs(1);
 const TEN_MIN: Duration = Duration::from_secs(10 * 60);
 
 fn init_db() -> Result<DB, CrateError> {
@@ -82,6 +83,6 @@ async fn main() -> Result<(), CrateError> {
             timer = Instant::now();
         }
 
-        tokio::time::sleep(Duration::from_secs(1)).await;
+        tokio::time::sleep(SLEEP_DURATION).await;
     }
 }
