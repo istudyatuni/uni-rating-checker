@@ -1,3 +1,6 @@
+#[cfg(feature = "prod")]
+use std::process::Command;
+
 const ENV_FILE: &str = include_str!(".env");
 
 fn main() {
@@ -15,4 +18,31 @@ fn main() {
         }
         println!("cargo:rustc-env={line}");
     }
+
+    env_commit_hash()
+}
+
+fn env_commit_hash() {
+    #[cfg(feature = "prod")]
+    {
+        let output = match Command::new("git")
+            .args(["rev-parse", "--short", "HEAD"])
+            .output()
+        {
+            Ok(output) => match String::from_utf8(output.stdout) {
+                Ok(s) => s,
+                Err(e) => {
+                    println!("cargo:warning=cannot get output of \"git rev-parse --short HEAD\" command: {e}");
+                    return;
+                }
+            },
+            Err(e) => {
+                println!("cargo:warning=cannot get git commit hash: {e}");
+                return;
+            }
+        };
+        println!("cargo:rustc-env=GIT_HASH={output}")
+    }
+    #[cfg(not(feature = "prod"))]
+    println!("cargo:rustc-env=GIT_HASH=dev")
 }

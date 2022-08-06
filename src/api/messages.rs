@@ -2,6 +2,8 @@
 
 use const_format::formatcp;
 
+const GIT_HASH: &str = env!("GIT_HASH");
+
 pub const description: &str = "Это бот для отслеживания изменений рейтинга поступления в вуз. \
 В данный момент поддерживается только магистратура ИТМО. Рейтинг проверяется каждые 10 минут";
 
@@ -12,8 +14,9 @@ pub const help: &str = r#"Доступные команды:
 /about - показать информацию о боте"#;
 
 pub const about: &str = formatcp!(
-    "{description}\nИсходный код: {}",
-    env!("CARGO_PKG_REPOSITORY")
+    "{description}\nИсходный код: {}\nКоммит \\(версия\\): `{}`",
+    env!("CARGO_PKG_REPOSITORY"),
+    GIT_HASH
 );
 
 pub const start: &str = formatcp!("Привет\\! {description}\n{help}");
