@@ -1,7 +1,6 @@
-use crate::db::sqlite::DB;
-
 use super::itmo::get_rating_competition;
 use super::tg::{send_competition_message, send_log};
+use crate::db::sqlite::DB;
 use crate::model::error::Error as CrateError;
 
 /// If competition not exists in DB, send message

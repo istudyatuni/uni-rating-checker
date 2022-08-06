@@ -1,10 +1,8 @@
+use super::{LOGS_CHAT_ID, TG_API_PREFIX, TOKEN};
+use crate::api::messages;
 use crate::model::error::Error as CrateError;
 use crate::model::itmo::Competition;
 use crate::model::tg::{ErrorResponse, SendMessageResponse};
-
-use crate::api::messages;
-
-use super::{LOGS_CHAT_ID, TG_API_PREFIX, TOKEN};
 
 pub async fn send_competition_message(
     competition: &Competition,

@@ -1,11 +1,9 @@
+use super::{send_incorrect_command_message, send_log, send_message, TG_API_PREFIX, TOKEN};
+use crate::api::common::handle_competition;
+use crate::api::messages;
 use crate::db::sqlite::DB;
 use crate::model::error::Error as CrateError;
 use crate::model::tg::{ErrorResponse, GetUpdatesResponse, MessageRequest};
-
-use crate::api::common::handle_competition;
-use crate::api::messages;
-
-use super::{send_incorrect_command_message, send_log, send_message, TG_API_PREFIX, TOKEN};
 
 async fn get_updates(offset: i64) -> Result<GetUpdatesResponse, CrateError> {
     let params = [("offset", &offset.to_string())];

@@ -1,9 +1,9 @@
 use std::time::{Duration, Instant};
 
-use crate::model::error::Error as CrateError;
 use api::itmo::load_programs;
 use api::{common::handle_competition, tg::handle_updates};
 use db::sqlite::DB;
+use model::error::Error as CrateError;
 
 mod api;
 mod db;
