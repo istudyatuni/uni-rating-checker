@@ -55,7 +55,7 @@ pub async fn handle_updates(db: &DB, offset: i64) -> Result<i64, CrateError> {
 
         if let Some(message) = update.message {
             if let Some(text) = message.text {
-                let chat_id = message.from.id.to_string();
+                let chat_id = message.chat.id.to_string();
                 match MessageRequest::from(text) {
                     Some(request) => {
                         if let Err(e) = handle_message_request(db, request, &chat_id).await {

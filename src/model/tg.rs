@@ -20,11 +20,17 @@ pub struct Update {
 #[derive(Debug, Deserialize)]
 pub struct Message {
     pub from: User,
+    pub chat: Chat,
     pub text: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct User {
+    pub id: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Chat {
     pub id: i64,
 }
 
