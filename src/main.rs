@@ -26,8 +26,10 @@ async fn main() -> Result<(), CrateError> {
         eprintln!("Error loading programs: {e}");
     }
 
+    check_rating_updates_wrapper(&db).await?;
+
     let mut offset = 0;
-    let mut timer = check_rating_updates_wrapper(&db).await?;
+    let mut timer = Instant::now();
     loop {
         offset = match handle_updates(&db, offset).await {
             Ok(o) => o,
@@ -38,7 +40,8 @@ async fn main() -> Result<(), CrateError> {
         };
 
         if timer.elapsed() >= TEN_MIN {
-            timer = check_rating_updates_wrapper(&db).await?;
+            check_rating_updates_wrapper(&db).await?;
+            timer = Instant::now();
         }
 
         tokio::time::sleep(SLEEP_DURATION).await;
@@ -59,12 +62,12 @@ fn init_db() -> Result<DB, CrateError> {
     DB::new(&db_path)
 }
 
-async fn check_rating_updates_wrapper(db: &DB) -> Result<Instant, CrateError> {
+async fn check_rating_updates_wrapper(db: &DB) -> Result<(), CrateError> {
     db.purge_cache()?;
     if let Err(e) = check_rating_updates(db).await {
         eprintln!("Error checking rating updates: {e}")
     }
-    Ok(Instant::now())
+    Ok(())
 }
 
 async fn check_rating_updates(db: &DB) -> Result<(), CrateError> {
