@@ -1,0 +1,19 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"LSP": {
+			"rust-analyzer": {
+				"settings": {
+					"rust-analyzer.cargo.features": [
+						// "prod"
+					]
+				}
+			}
+		}
+	}
+}
