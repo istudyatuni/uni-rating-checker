@@ -1,7 +1,7 @@
 #[derive(Debug)]
 #[allow(clippy::enum_variant_names)]
+/// Errors mapping used in this app for better error handling
 pub enum Error {
-    // own errors
     /// not found competition in rating
     NoMatchingCompetition,
     /// returned data is empty
@@ -12,6 +12,7 @@ pub enum Error {
     SendMessageError(Option<String>),
     /// we can't send message, e.g. bot blocked by user
     CannotSendMessage(Option<String>),
+    /// we cannot get updates from telegram
     CannotGetUpdates(Option<String>),
 
     // wrappers
