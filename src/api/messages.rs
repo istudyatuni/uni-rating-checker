@@ -14,12 +14,12 @@ pub const help: &str = r#"Доступные команды:
 /about - показать информацию о боте"#;
 
 pub const about: &str = formatcp!(
-    "{description}\nИсходный код: {}\nКоммит \\(версия\\): `{}`",
+    "{description}\n\nИсходный код: {}\n\nКоммит \\(версия\\): `{}`",
     env!("CARGO_PKG_REPOSITORY"),
     GIT_HASH
 );
 
-pub const start: &str = formatcp!("Привет\\! {description}\n{help}");
+pub const start: &str = formatcp!("Привет\\! {description}\n\n{help}");
 
 pub const unknown_message: &str = "Даже не знаю что сказать. Попробуй /help";
 
