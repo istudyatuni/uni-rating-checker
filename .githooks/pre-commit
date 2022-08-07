@@ -1,0 +1,4 @@
+#!/bin/sh
+cargo fmt --check
+cargo check --all-features
+cargo clippy --all-features

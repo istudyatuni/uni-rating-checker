@@ -43,3 +43,11 @@ cargo b --release --features prod
 ```
 
 and take the executable file from the `target/release` folder.
+
+## Development
+
+Enable git hooks:
+
+```sh
+git config core.hooksPath .githooks
+```
