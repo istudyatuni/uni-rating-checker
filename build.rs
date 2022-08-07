@@ -1,9 +1,11 @@
-#[cfg(feature = "prod")]
-use std::process::Command;
-
 const ENV_FILE: &str = include_str!(".env");
 
 fn main() {
+    parse_dotenv();
+    env_commit_hash();
+}
+
+fn parse_dotenv() {
     for line in ENV_FILE.split('\n') {
         let line = line.trim();
         if line.starts_with('#') || line.is_empty() {
@@ -18,14 +20,12 @@ fn main() {
         }
         println!("cargo:rustc-env={line}");
     }
-
-    env_commit_hash()
 }
 
 fn env_commit_hash() {
     #[cfg(feature = "prod")]
     {
-        let output = match Command::new("git")
+        let output = match std::process::Command::new("git")
             .args(["rev-parse", "--short", "HEAD"])
             .output()
         {
