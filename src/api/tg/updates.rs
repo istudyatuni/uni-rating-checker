@@ -1,19 +1,23 @@
+use serde_json::json;
+
 use super::{send_incorrect_command_message, send_log, send_message, TG_API_PREFIX, TOKEN};
 use crate::api::common::handle_competition;
-use crate::api::messages;
+use crate::api::{messages, CLIENT};
 use crate::db::sqlite::DB;
 use crate::model::error::Error as CrateError;
 use crate::model::tg::{ErrorResponse, GetUpdatesResponse, MessageRequest};
 
 async fn get_updates(offset: i64) -> Result<GetUpdatesResponse, CrateError> {
-    let params = [("offset", &offset.to_string())];
-    let url_path = format!("{TG_API_PREFIX}{TOKEN}/getUpdates");
-    let url = match reqwest::Url::parse_with_params(&url_path, &params) {
-        Ok(u) => u,
-        Err(e) => return Err(CrateError::UrlParseError(e)),
-    };
+    let data = json!({
+        "offset": offset,
+    });
 
-    let response = match reqwest::get(url).await {
+    let response = CLIENT
+        .post(format!("{TG_API_PREFIX}{TOKEN}/getUpdates"))
+        .body(reqwest::Body::from(data.to_string()))
+        .header("content-type", "application/json")
+        .send();
+    let response = match response.await {
         Ok(r) => r,
         Err(e) => return Err(CrateError::RequestError(e)),
     };

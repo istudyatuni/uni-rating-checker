@@ -1,5 +1,8 @@
+use serde_json::json;
+
 use super::{LOGS_CHAT_ID, TG_API_PREFIX, TOKEN};
 use crate::api::messages;
+use crate::api::CLIENT;
 use crate::model::error::Error as CrateError;
 use crate::model::itmo::Competition;
 use crate::model::tg::{ErrorResponse, SendMessageResponse};
@@ -47,18 +50,18 @@ pub async fn send_incorrect_command_message(
 pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
     let text = &text.replace('-', "\\-").replace('.', "\\.");
 
-    let params = [
-        ("chat_id", chat_id),
-        ("text", text),
-        ("parse_mode", "MarkdownV2"),
-    ];
+    let data = json!({
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "MarkdownV2",
+    });
 
-    let url_path = format!("{TG_API_PREFIX}{TOKEN}/sendMessage");
-    let url = match reqwest::Url::parse_with_params(&url_path, &params) {
-        Ok(u) => u,
-        Err(e) => return Err(CrateError::UrlParseError(e)),
-    };
-    let response = match reqwest::get(url).await {
+    let response = CLIENT
+        .post(format!("{TG_API_PREFIX}{TOKEN}/sendMessage"))
+        .body(reqwest::Body::from(data.to_string()))
+        .header("content-type", "application/json")
+        .send();
+    let response = match response.await {
         Ok(r) => r,
         Err(e) => return Err(CrateError::RequestError(e)),
     };
