@@ -1,4 +1,4 @@
 #!/bin/sh
 cargo fmt --check
-cargo check --all-features
-cargo clippy --all-features
+cargo check --quiet --all-features || exit 1
+cargo clippy --quiet --all-features || exit 1
