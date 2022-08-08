@@ -19,7 +19,6 @@ pub enum Error {
     DbError(rusqlite::Error),
     RequestError(reqwest::Error),
     DecodeJsonError(serde_json::Error),
-    UrlParseError(url::ParseError),
 }
 
 impl std::fmt::Display for Error {
@@ -51,7 +50,6 @@ impl std::fmt::Display for Error {
             Self::DbError(e) => e.to_string(),
             Self::RequestError(e) => e.to_string(),
             Self::DecodeJsonError(e) => e.to_string(),
-            Self::UrlParseError(e) => e.to_string(),
         };
         write!(f, "{name}")
     }

@@ -69,17 +69,8 @@ fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition
 }
 
 async fn get_programs() -> Result<Vec<ProgramsGroup>, CrateError> {
-    let params = [
-        ("degree", "master".to_string()),
-        // enough for now
-        ("limit", 100.to_string()),
-        ("page", 1.to_string()),
-    ];
-    let url = match reqwest::Url::parse_with_params(&format!("{API_PREFIX}/programs/list"), &params)
-    {
-        Ok(u) => u,
-        Err(e) => return Err(CrateError::UrlParseError(e)),
-    };
+    // 100 is enough for now
+    let url = format!("{API_PREFIX}/programs/list?degree=master&limit=100&page=1");
     let response = match reqwest::get(url).await {
         Ok(r) => r,
         Err(e) => return Err(CrateError::RequestError(e)),
