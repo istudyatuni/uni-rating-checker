@@ -4,10 +4,10 @@ use super::{send_incorrect_command_message, send_log, send_message, TG_API_PREFI
 use crate::api::common::handle_competition;
 use crate::api::{messages, CLIENT};
 use crate::db::sqlite::DB;
-use crate::model::error::Error as CrateError;
+use crate::model::error::{Error as CrateError, Result};
 use crate::model::tg::{ErrorResponse, GetUpdatesResponse, MessageRequest};
 
-async fn get_updates(offset: i64) -> Result<GetUpdatesResponse, CrateError> {
+async fn get_updates(offset: i64) -> Result<GetUpdatesResponse> {
     let data = json!({
         "offset": offset,
     });
@@ -39,7 +39,7 @@ async fn get_updates(offset: i64) -> Result<GetUpdatesResponse, CrateError> {
 }
 
 /// Get and handle updates for TG bot
-pub async fn handle_updates(db: &DB, offset: i64) -> Result<i64, CrateError> {
+pub async fn handle_updates(db: &DB, offset: i64) -> Result<i64> {
     let data = get_updates(offset).await?;
 
     // just want to know
@@ -84,11 +84,7 @@ pub async fn handle_updates(db: &DB, offset: i64) -> Result<i64, CrateError> {
     Ok(max_update_id + 1)
 }
 
-async fn handle_message_request(
-    db: &DB,
-    request: MessageRequest,
-    chat_id: &str,
-) -> Result<(), CrateError> {
+async fn handle_message_request(db: &DB, request: MessageRequest, chat_id: &str) -> Result<()> {
     match request {
         MessageRequest::Watch(args) => {
             let result = handle_competition(

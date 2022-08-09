@@ -3,7 +3,7 @@ use serde_json::json;
 use super::{LOGS_CHAT_ID, TG_API_PREFIX, TOKEN};
 use crate::api::messages;
 use crate::api::CLIENT;
-use crate::model::error::Error as CrateError;
+use crate::model::error::{Error as CrateError, Result};
 use crate::model::itmo::Competition;
 use crate::model::tg::{ErrorResponse, SendMessageResponse};
 
@@ -11,7 +11,7 @@ pub async fn send_competition_message(
     competition: &Competition,
     chat_id: &str,
     program_name: &str,
-) -> Result<(), CrateError> {
+) -> Result<()> {
     let text = if let Some(case_number) = &competition.case_number {
         format!(
             "*{}*\n_{}_\nПозиция {}\nВсего баллов {}\nБалл ВИ {}",
@@ -31,10 +31,7 @@ pub async fn send_competition_message(
     send_message(&text, chat_id).await
 }
 
-pub async fn send_incorrect_command_message(
-    command: &str,
-    chat_id: &str,
-) -> Result<(), CrateError> {
+pub async fn send_incorrect_command_message(command: &str, chat_id: &str) -> Result<()> {
     let text = format!(
         "{}\n{}",
         messages::incorrect_command_header,
@@ -47,7 +44,7 @@ pub async fn send_incorrect_command_message(
     send_message(&text, chat_id).await
 }
 
-pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
+pub async fn send_message(text: &str, chat_id: &str) -> Result<()> {
     let text = &text.replace('-', "\\-").replace('.', "\\.");
 
     let data = json!({
@@ -85,7 +82,7 @@ pub async fn send_message(text: &str, chat_id: &str) -> Result<(), CrateError> {
     }
 }
 
-pub async fn send_log(text: &str) -> Result<(), CrateError> {
+pub async fn send_log(text: &str) -> Result<()> {
     if let Err(e) = send_message(text, LOGS_CHAT_ID).await {
         eprintln!("failed to send log: {text}\nerror: {e}")
     }

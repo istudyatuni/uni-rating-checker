@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use api::itmo::load_programs;
 use api::{common::handle_competition, tg::handle_updates};
 use db::sqlite::DB;
-use model::error::Error as CrateError;
+use model::error::Result;
 
 mod api;
 mod db;
@@ -13,7 +13,7 @@ const SLEEP_DURATION: Duration = Duration::from_secs(1);
 const TEN_MIN: Duration = Duration::from_secs(10 * 60);
 
 #[tokio::main]
-async fn main() -> Result<(), CrateError> {
+async fn main() -> Result<()> {
     let db = match init_db() {
         Ok(d) => d,
         Err(e) => {
@@ -48,7 +48,7 @@ async fn main() -> Result<(), CrateError> {
     }
 }
 
-fn init_db() -> Result<DB, CrateError> {
+fn init_db() -> Result<DB> {
     #[cfg(feature = "prod")]
     let db_path: String = if let Some(home_dir) = dirs::home_dir() {
         format!("{}/itmo.db", home_dir.display())
@@ -62,7 +62,7 @@ fn init_db() -> Result<DB, CrateError> {
     DB::new(&db_path)
 }
 
-async fn check_rating_updates_wrapper(db: &DB) -> Result<(), CrateError> {
+async fn check_rating_updates_wrapper(db: &DB) -> Result<()> {
     db.purge_cache()?;
     if let Err(e) = check_rating_updates(db).await {
         eprintln!("Error checking rating updates: {e}")
@@ -70,7 +70,7 @@ async fn check_rating_updates_wrapper(db: &DB) -> Result<(), CrateError> {
     Ok(())
 }
 
-async fn check_rating_updates(db: &DB) -> Result<(), CrateError> {
+async fn check_rating_updates(db: &DB) -> Result<()> {
     // select registered watchers from 'results'
     match db.select_all_competitions() {
         Ok(competitions) => {

@@ -1,5 +1,5 @@
 use crate::db::sqlite::{cache_key, DB};
-use crate::model::error::Error as CrateError;
+use crate::model::error::{Error as CrateError, Result};
 use crate::model::itmo::{
     Competition, ErrorResponse, ProgramsGroup, ProgramsResponse, RatingResponse,
 };
@@ -13,7 +13,7 @@ pub async fn get_rating_competition(
     degree: &str,
     program_id: &str,
     case_number: &str,
-) -> Result<Option<Competition>, CrateError> {
+) -> Result<Option<Competition>> {
     let key = cache_key(degree, program_id);
     let raw_json = if let Some(cached) = db.select_cache(&key)? {
         cached
@@ -68,7 +68,7 @@ fn find_score(response: RatingResponse, case_number: &str) -> Option<Competition
         .cloned()
 }
 
-async fn get_programs() -> Result<Vec<ProgramsGroup>, CrateError> {
+async fn get_programs() -> Result<Vec<ProgramsGroup>> {
     // 100 is enough for now
     let url = format!("{API_PREFIX}/programs/list?degree=master&limit=100&page=1");
     let response = match reqwest::get(url).await {
@@ -88,7 +88,7 @@ async fn get_programs() -> Result<Vec<ProgramsGroup>, CrateError> {
     }
 }
 
-pub async fn load_programs(db: &DB) -> Result<(), CrateError> {
+pub async fn load_programs(db: &DB) -> Result<()> {
     let groups = get_programs().await?;
     for group in &groups {
         for program in &group.programs {

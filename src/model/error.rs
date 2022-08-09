@@ -1,3 +1,5 @@
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug)]
 #[allow(clippy::enum_variant_names)]
 /// Errors mapping used in this app for better error handling
