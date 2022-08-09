@@ -19,12 +19,7 @@ pub async fn handle_competition(
     match db.select_competition(chat_id, case_number, degree, program_id) {
         Ok(old_competition) => {
             if let Some(competition) = competition {
-                let program = db.select_program("itmo", program_id)?;
-                let program_name = if let Some(program) = program {
-                    program.title_ru
-                } else {
-                    "Названия нет".to_string()
-                };
+                let program_name = get_program_name(db, program_id)?;
 
                 let mut should_send_message = false;
 
@@ -53,4 +48,14 @@ pub async fn handle_competition(
         Err(e) => return Err(e),
     };
     Ok(())
+}
+
+pub fn get_program_name(db: &DB, program_id: &str) -> Result<String> {
+    let program = db.select_program("itmo", program_id)?;
+    let program_name = if let Some(program) = program {
+        program.title_ru
+    } else {
+        "Названия нет".to_string()
+    };
+    Ok(program_name)
 }

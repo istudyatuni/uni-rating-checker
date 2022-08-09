@@ -1,7 +1,10 @@
 use serde_json::json;
 
-use super::{send_incorrect_command_message, send_log, send_message, TG_API_PREFIX, TOKEN};
-use crate::api::common::handle_competition;
+use super::{
+    send_competition_message, send_incorrect_command_message, send_log, send_message,
+    TG_API_PREFIX, TOKEN,
+};
+use crate::api::common::{get_program_name, handle_competition};
 use crate::api::{messages, CLIENT};
 use crate::db::sqlite::DB;
 use crate::model::error::{Error as CrateError, Result};
@@ -130,6 +133,14 @@ async fn handle_message_request(db: &DB, request: MessageRequest, chat_id: &str)
             send_message(messages::easter_egg, chat_id).await?
         }
         MessageRequest::About => send_message(messages::about, chat_id).await?,
+        MessageRequest::All => {
+            if let Ok(competitions) = db.select_competitions_by_user(chat_id) {
+                for c in competitions {
+                    let program_name = get_program_name(db, &c.program_id)?;
+                    send_competition_message(&c.competition, chat_id, &program_name).await?
+                }
+            }
+        }
     };
     Ok(())
 }

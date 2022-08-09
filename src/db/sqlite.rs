@@ -8,6 +8,7 @@ const INIT_DB_SQL: &str = include_str!("./sql/init.sql");
 
 const SELECT_COMPETITION_SQL: &str = include_str!("./sql/select/competition.sql");
 const SELECT_ALL_COMPETITIONS_SQL: &str = include_str!("./sql/select/all_competitions.sql");
+const SELECT_COMPETITIONS_BY_USER_SQL: &str = include_str!("./sql/select/competitions_by_user.sql");
 const INSERT_COMPETITION_SQL: &str = include_str!("./sql/insert/competition.sql");
 const UPDATE_COMPETITION_SQL: &str = include_str!("./sql/update/competition.sql");
 const DELETE_COMPETITION_SQL: &str = include_str!("./sql/delete/competition.sql");
@@ -80,11 +81,23 @@ impl DB {
         }
     }
     pub fn select_all_competitions(&self) -> Result<Vec<DbResultItem>> {
-        let mut statement = match self.conn.prepare(SELECT_ALL_COMPETITIONS_SQL) {
+        self.select_competitions_base(SELECT_ALL_COMPETITIONS_SQL, ())
+    }
+    pub fn select_competitions_by_user(&self, tg_chat_id: &str) -> Result<Vec<DbResultItem>> {
+        self.select_competitions_base(
+            SELECT_COMPETITIONS_BY_USER_SQL,
+            &[(":tg_chat_id", &tg_chat_id)],
+        )
+    }
+    fn select_competitions_base<P>(&self, query: &str, params: P) -> Result<Vec<DbResultItem>>
+    where
+        P: rusqlite::Params,
+    {
+        let mut statement = match self.conn.prepare(query) {
             Ok(s) => s,
             Err(e) => return Err(CrateError::DbError(e)),
         };
-        let result = statement.query_map((), |row| {
+        let result = statement.query_map(params, |row| {
             Ok(DbResultItem {
                 tg_chat_id: row.get(0)?,
                 degree: row.get(2)?,

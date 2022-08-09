@@ -87,6 +87,7 @@ impl Watch {
 pub enum MessageRequest {
     About,
     Help,
+    All,
     Start,
     Statistics,
     Unwatch(Watch),
@@ -129,6 +130,7 @@ impl MessageRequest {
             }
             "/about" => Some(Self::About),
             "/help" => Some(Self::Help),
+            "/all" => Some(Self::All),
             "/start" => Some(Self::Start),
             "/stats" => Some(Self::Statistics),
             _ => None,
