@@ -133,7 +133,7 @@ async fn handle_message_request(db: &DB, request: MessageRequest, chat_id: &str)
             send_message(messages::easter_egg, chat_id).await?
         }
         MessageRequest::About => send_message(messages::about, chat_id).await?,
-        MessageRequest::All => {
+        MessageRequest::ShowAll => {
             if let Ok(competitions) = db.select_competitions_by_user(chat_id) {
                 for c in competitions {
                     let program_name = get_program_name(db, &c.program_id)?;
