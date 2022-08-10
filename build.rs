@@ -6,7 +6,7 @@ fn main() {
 }
 
 fn parse_dotenv() {
-    for line in ENV_FILE.split('\n') {
+    for line in ENV_FILE.lines() {
         let line = line.trim();
         if line.starts_with('#') || line.is_empty() {
             continue;
