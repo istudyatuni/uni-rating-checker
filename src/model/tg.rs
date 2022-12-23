@@ -36,7 +36,7 @@ pub struct Chat {
 
 // Bot commands
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Degree {
     Bachelor,
     Master,
