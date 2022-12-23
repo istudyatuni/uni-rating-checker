@@ -122,7 +122,7 @@ async fn handle_message_request(db: &DB, request: MessageRequest, chat_id: &str)
             send_incorrect_command_message(&command, chat_id).await?
         }
         MessageRequest::Help => send_message(messages::help, chat_id).await?,
-        MessageRequest::Start => send_message(messages::start, chat_id).await?,
+        MessageRequest::Start => send_message(&messages::start, chat_id).await?,
         MessageRequest::Statistics => {
             send_log(&format!(
                 "statistics:\n{} unique watchers\n{} deleted chats \\(may overlap the number of watchers\\)",
@@ -132,7 +132,7 @@ async fn handle_message_request(db: &DB, request: MessageRequest, chat_id: &str)
             .await?;
             send_message(messages::easter_egg, chat_id).await?
         }
-        MessageRequest::About => send_message(messages::about, chat_id).await?,
+        MessageRequest::About => send_message(&messages::about, chat_id).await?,
         MessageRequest::ShowAll => {
             if let Ok(competitions) = db.select_competitions_by_user(chat_id) {
                 for c in competitions {

@@ -1,7 +1,8 @@
 #![allow(non_upper_case_globals)]
 
-use const_format::formatcp;
+use lazy_static::lazy_static;
 
+const CARGO_PKG_REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const GIT_HASH: &str = env!("GIT_HASH");
 
 pub const description: &str = "Это бот для отслеживания изменений рейтинга поступления в вуз. \
@@ -15,13 +16,13 @@ pub const help: &str = r#"Доступные команды:
 /help - показать справку
 /about - показать информацию о боте"#;
 
-pub const about: &str = formatcp!(
-    "{description}\n\nИсходный код: {}\n\nКоммит \\(версия\\): `{}`",
-    env!("CARGO_PKG_REPOSITORY"),
-    GIT_HASH
-);
-
-pub const start: &str = formatcp!("Привет\\! {description}\n\n{help}");
+lazy_static! {
+    pub static ref about: String = format!(
+        "{description}\n\nИсходный код: {}\n\nКоммит \\(версия\\): `{}`",
+        CARGO_PKG_REPOSITORY, GIT_HASH
+    );
+    pub static ref start: String = format!("Привет\\! {description}\n\n{help}");
+}
 
 pub const unknown_message: &str = "Даже не знаю что сказать. Попробуй /help";
 
