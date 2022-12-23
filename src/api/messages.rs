@@ -18,8 +18,7 @@ pub const help: &str = r#"Доступные команды:
 
 lazy_static! {
     pub static ref about: String = format!(
-        "{description}\n\nИсходный код: {}\n\nКоммит \\(версия\\): `{}`",
-        CARGO_PKG_REPOSITORY, GIT_HASH
+        "{description}\n\nИсходный код: {CARGO_PKG_REPOSITORY}\n\nКоммит \\(версия\\): `{GIT_HASH}`"
     );
     pub static ref start: String = format!("Привет\\! {description}\n\n{help}");
 }
